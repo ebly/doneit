@@ -165,6 +165,11 @@ body.dark-mode .main-content {
   padding: 0 !important;
 }
 
+/* 移除表格单元格padding */
+.el-table .cell {
+  padding: 0 !important;
+}
+
 /* 移动设备布局优化 */
 @media (max-width: 768px) {
   .app-container {
