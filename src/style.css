@@ -165,10 +165,11 @@ body.dark-mode .main-content {
   padding: 0 !important;
 }
 
-/* 设置表格单元格文本居中并移除内边距 */
+/* 设置表格单元格文本居中、移除内边距并重置行高 */
 .el-table .cell {
   padding: 0 !important;
   text-align: center;
+  line-height: normal !important;
 }
 
 /* 确保表格单元格本身也居中 */
