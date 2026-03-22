@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { Star } from '@element-plus/icons-vue'
 
+// 获取当前星期几的索引：0=周日，1=周一，...，6=周六
+const currentDayIndex = ref(new Date().getDay())
+
 const habits = ref([
   {
     id: 1,
@@ -61,36 +64,42 @@ const toggleDay = (habitId, dayIndex) => {
       <div class="habit-table">
         <div class="table-header">
           <div class="header-cell habit-column">Habit</div>
-          <div class="header-cell day-column">S</div>
-          <div class="header-cell day-column">M</div>
-          <div class="header-cell day-column">T</div>
-          <div class="header-cell day-column">W</div>
-          <div class="header-cell day-column">T</div>
-          <div class="header-cell day-column">F</div>
-          <div class="header-cell day-column">S</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 0 === currentDayIndex.value }">Sun</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 1 === currentDayIndex.value }">Mon</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 2 === currentDayIndex.value }">Tue</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 3 === currentDayIndex.value }">Wed</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 4 === currentDayIndex.value }">Thu</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 5 === currentDayIndex.value }">Fri</div>
+          <div class="header-cell day-column" :class="{ 'current-day': 6 === currentDayIndex.value }">Sat</div>
           <div class="header-cell streak-column">Streak</div>
         </div>
         
         <div class="table-body">
           <div v-for="habit in habits" :key="habit.id" class="habit-row">
-            <div class="habit-info">
+            <div class="row-cell habit-info">
               <span class="habit-icon">{{ getHabitIcon(habit) }}</span>
               <span class="habit-name">{{ habit.name }}</span>
             </div>
             
-            <div class="day-icons">
+            <div 
+              v-for="(completed, index) in habit.completed" 
+              :key="index"
+              class="row-cell day-column"
+              :class="{ 'current-day-column': index === currentDayIndex.value }"
+            >
               <div 
-                v-for="(completed, index) in habit.completed" 
-                :key="index"
                 class="day-icon"
-                :class="{ completed: completed }"
+                :class="{
+                  'completed': completed,
+                  'current-day-icon': index === currentDayIndex.value
+                }"
                 @click="toggleDay(habit.id, index)"
               >
                 <span v-if="completed">✓</span>
               </div>
             </div>
             
-            <div class="streak-info">
+            <div class="row-cell streak-info">
               <el-tag type="warning">
                 <el-icon><Star /></el-icon> {{ habit.streak }} days
               </el-tag>
@@ -134,24 +143,36 @@ const toggleDay = (habitId, dayIndex) => {
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  position: relative;
 }
+
+/* 当前天的整列背景条已移除，改为为单个单元格添加背景 */
 
 .table-header {
   display: flex;
   background-color: var(--bg-tertiary);
-  padding: 15px;
   font-weight: 600;
   color: var(--text-primary);
+  height: 40px;
+  line-height: 40px;
 }
 
 .habit-column {
   flex: 1;
   min-width: 200px;
+  text-align: center;
 }
 
 .day-column {
-  width: 40px;
+  width: 50px;
   text-align: center;
+}
+
+/* 当前天的列背景 */
+.day-column.current-day {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
 }
 
 .streak-column {
@@ -162,9 +183,9 @@ const toggleDay = (habitId, dayIndex) => {
 .habit-row {
   display: flex;
   align-items: center;
-  padding: 15px;
   border-bottom: 1px solid var(--border-color);
   transition: background-color var(--transition-fast);
+  height: 60px;
 }
 
 .habit-row:hover {
@@ -177,6 +198,8 @@ const toggleDay = (habitId, dayIndex) => {
   gap: 12px;
   flex: 1;
   min-width: 200px;
+  position: relative;
+  z-index: 1;
 }
 
 .habit-icon {
@@ -189,10 +212,30 @@ const toggleDay = (habitId, dayIndex) => {
   color: var(--text-primary);
 }
 
-.day-icons {
+.row-cell {
   display: flex;
-  gap: 8px;
-  margin: 0 20px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* 习惯信息单元格 */
+.row-cell.habit-info {
+  flex: 1;
+  min-width: 200px;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* 星期几单元格 */
+.row-cell.day-column {
+  width: 50px;
+  text-align: center;
+}
+
+/* 当前天的列背景 */
+.row-cell.day-column.current-day-column {
+  background-color: rgba(50, 112, 202, 0.05);
 }
 
 .day-icon {
@@ -219,12 +262,20 @@ const toggleDay = (habitId, dayIndex) => {
   font-weight: bold;
 }
 
-.streak-info {
+/* 当前天的圆圈样式 */
+.day-icon.current-day-icon {
+  border-color: var(--primary-color);
+  background-color: rgba(50, 112, 202, 0.1);
+}
+
+.row-cell.streak-info {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
   width: 120px;
+  position: relative;
+  z-index: 1;
 }
 
 .progress-bar {

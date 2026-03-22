@@ -44,7 +44,7 @@
     --danger-color: #e74c3c;
     --warning-color: #f39c12;
 
-    --text-primary: #ecf0f1;
+    --text-primary: #000;
     --text-secondary: #bdc3c7;
     --text-light: #95a5a6;
 
@@ -70,7 +70,7 @@ body.dark-mode {
   --danger-color: #e74c3c;
   --warning-color: #f39c12;
 
-  --text-primary: #ecf0f1;
+  --text-primary: #000;
   --text-secondary: #bdc3c7;
   --text-light: #95a5a6;
 
