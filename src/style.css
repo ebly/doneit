@@ -165,9 +165,8 @@ body.dark-mode .main-content {
   padding: 0 !important;
 }
 
-/* 移除表格单元格padding并设置文本居中 */
+/* 设置表格单元格文本居中 */
 .el-table .cell {
-  padding: 0 !important;
   text-align: center;
 }
 
