@@ -5,8 +5,6 @@ const HabitList = defineAsyncComponent(() => import('./components/HabitList.vue'
 const HabitForm = defineAsyncComponent(() => import('./components/HabitForm.vue'))
 const Dashboard = defineAsyncComponent(() => import('./components/Dashboard.vue'))
 import { Sunny, Moon, Search } from '@element-plus/icons-vue'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
 
 // 暗色模式相关逻辑
 const isDarkMode = ref(false)
