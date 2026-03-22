@@ -256,6 +256,15 @@ const toggleDay = (habitId, dayIndex) => {
   color: var(--text-primary);
 }
 
+/* 确保表头和表格单元格对齐 */
+.header-cell, .table-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
 /* 当前天的列背景 */
 .header-cell.current-day {
   background-color: var(--primary-color);
