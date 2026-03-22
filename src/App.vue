@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import HabitList from './components/HabitList.vue'
-import HabitForm from './components/HabitForm.vue'
-import Dashboard from './components/Dashboard.vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+// 使用动态导入实现按需加载
+const HabitList = defineAsyncComponent(() => import('./components/HabitList.vue'))
+const HabitForm = defineAsyncComponent(() => import('./components/HabitForm.vue'))
+const Dashboard = defineAsyncComponent(() => import('./components/Dashboard.vue'))
 import { Sunny, Moon, Search } from '@element-plus/icons-vue'
+import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
 // 暗色模式相关逻辑
