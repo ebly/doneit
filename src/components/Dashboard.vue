@@ -59,61 +59,182 @@ const toggleDay = (habitId, dayIndex) => {
     <div class="dashboard-header">
       <h2>Track Your Habits Daily!</h2>
     </div>
-    
-    <div class="dashboard-content">
-      <div class="habit-table">
-        <div class="table-header">
-          <div class="header-cell habit-column">Habit</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 0 === currentDayIndex.value }">Sun</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 1 === currentDayIndex.value }">Mon</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 2 === currentDayIndex.value }">Tue</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 3 === currentDayIndex.value }">Wed</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 4 === currentDayIndex.value }">Thu</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 5 === currentDayIndex.value }">Fri</div>
-          <div class="header-cell day-column" :class="{ 'current-day': 6 === currentDayIndex.value }">Sat</div>
-          <div class="header-cell streak-column">Streak</div>
-        </div>
-        
-        <div class="table-body">
-          <div v-for="habit in habits" :key="habit.id" class="habit-row">
-            <div class="row-cell habit-info">
-              <span class="habit-icon">{{ getHabitIcon(habit) }}</span>
-              <span class="habit-name">{{ habit.name }}</span>
+
+    <el-card class="habits-container" shadow="hover" style="margin-top: 20px;">
+      <el-table
+        :data="habits"
+        stripe
+        style="width: 100%;"
+      >
+        <!-- Habit Column -->
+        <el-table-column label="Habit" min-width="300">
+          <template #default="{ row }">
+            <div class="habit-info">
+              <span class="habit-icon">{{ getHabitIcon(row) }}</span>
+              <span class="habit-name">{{ row.name }}</span>
             </div>
-            
-            <div 
-              v-for="(completed, index) in habit.completed" 
-              :key="index"
-              class="row-cell day-column"
-              :class="{ 'current-day-column': index === currentDayIndex.value }"
-            >
+          </template>
+        </el-table-column>
+
+        <!-- Day Columns -->
+        <el-table-column label="Sun" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 0 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 0 === currentDayIndex.value }">
               <div 
                 class="day-icon"
                 :class="{
-                  'completed': completed,
-                  'current-day-icon': index === currentDayIndex.value
+                  'completed': row.completed[0],
+                  'current-day-icon': 0 === currentDayIndex.value
                 }"
-                @click="toggleDay(habit.id, index)"
+                @click="toggleDay(row.id, 0)"
               >
-                <span v-if="completed">✓</span>
+                <span v-if="row.completed[0]">✓</span>
               </div>
             </div>
-            
-            <div class="row-cell streak-info">
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Mon" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 1 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 1 === currentDayIndex.value }">
+              <div 
+                class="day-icon"
+                :class="{
+                  'completed': row.completed[1],
+                  'current-day-icon': 1 === currentDayIndex.value
+                }"
+                @click="toggleDay(row.id, 1)"
+              >
+                <span v-if="row.completed[1]">✓</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Tue" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 2 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 2 === currentDayIndex.value }">
+              <div 
+                class="day-icon"
+                :class="{
+                  'completed': row.completed[2],
+                  'current-day-icon': 2 === currentDayIndex.value
+                }"
+                @click="toggleDay(row.id, 2)"
+              >
+                <span v-if="row.completed[2]">✓</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Wed" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 3 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 3 === currentDayIndex.value }">
+              <div 
+                class="day-icon"
+                :class="{
+                  'completed': row.completed[3],
+                  'current-day-icon': 3 === currentDayIndex.value
+                }"
+                @click="toggleDay(row.id, 3)"
+              >
+                <span v-if="row.completed[3]">✓</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Thu" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 4 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 4 === currentDayIndex.value }">
+              <div 
+                class="day-icon"
+                :class="{
+                  'completed': row.completed[4],
+                  'current-day-icon': 4 === currentDayIndex.value
+                }"
+                @click="toggleDay(row.id, 4)"
+              >
+                <span v-if="row.completed[4]">✓</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Fri" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 5 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 5 === currentDayIndex.value }">
+              <div 
+                class="day-icon"
+                :class="{
+                  'completed': row.completed[5],
+                  'current-day-icon': 5 === currentDayIndex.value
+                }"
+                @click="toggleDay(row.id, 5)"
+              >
+                <span v-if="row.completed[5]">✓</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="Sat" width="50" align="center">
+          <template #header-cell="scope">
+            <div class="header-cell day-column" :class="{ 'current-day': 6 === currentDayIndex.value }">{{ scope.column.label }}</div>
+          </template>
+          <template #default="{ row }">
+            <div class="table-cell day-column" :class="{ 'current-day-column': 6 === currentDayIndex.value }">
+              <div 
+                class="day-icon"
+                :class="{
+                  'completed': row.completed[6],
+                  'current-day-icon': 6 === currentDayIndex.value
+                }"
+                @click="toggleDay(row.id, 6)"
+              >
+                <span v-if="row.completed[6]">✓</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- Streak Column -->
+        <el-table-column label="Streak" width="120" align="center">
+          <template #default="{ row }">
+            <div class="streak-info">
               <el-tag type="warning">
-                <el-icon><Star /></el-icon> {{ habit.streak }} days
+                <el-icon><Star /></el-icon> {{ row.streak }} days
               </el-tag>
               <div class="progress-bar">
                 <div 
                   class="progress-fill"
-                  :style="{ width: `${(habit.streak / 30) * 100}%` }"
+                  :style="{ width: `${(row.streak / 30) * 100}%` }"
                 ></div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
   </div>
 </template>
 
@@ -127,114 +248,23 @@ const toggleDay = (habitId, dayIndex) => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .dashboard-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
   color: var(--text-primary);
-}
-
-.habit-table {
-  width: 100%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-  position: relative;
-}
-
-/* 当前天的整列背景条已移除，改为为单个单元格添加背景 */
-
-.table-header {
-  display: flex;
-  background-color: var(--bg-tertiary);
-  font-weight: 600;
-  color: var(--text-primary);
-  height: 40px;
-  line-height: 40px;
-}
-
-.habit-column {
-  flex: 1;
-  min-width: 200px;
-  text-align: center;
-}
-
-.day-column {
-  width: 50px;
-  text-align: center;
 }
 
 /* 当前天的列背景 */
-.day-column.current-day {
+.header-cell.current-day {
   background-color: var(--primary-color);
   color: white;
   border-radius: 4px;
 }
 
-.streak-column {
-  width: 120px;
-  text-align: center;
-}
-
-.habit-row {
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--border-color);
-  transition: background-color var(--transition-fast);
-  height: 60px;
-}
-
-.habit-row:hover {
-  background-color: var(--bg-secondary);
-}
-
-.habit-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 200px;
-  position: relative;
-  z-index: 1;
-}
-
-.habit-icon {
-  font-size: 24px;
-}
-
-.habit-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.row-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-/* 习惯信息单元格 */
-.row-cell.habit-info {
-  flex: 1;
-  min-width: 200px;
-  justify-content: flex-start;
-  gap: 12px;
-}
-
-/* 星期几单元格 */
-.row-cell.day-column {
-  width: 50px;
-  text-align: center;
-}
-
 /* 当前天的列背景 */
-.row-cell.day-column.current-day-column {
+.table-cell.current-day-column {
   background-color: rgba(50, 112, 202, 0.05);
 }
 
@@ -268,16 +298,6 @@ const toggleDay = (habitId, dayIndex) => {
   background-color: rgba(50, 112, 202, 0.1);
 }
 
-.row-cell.streak-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  width: 120px;
-  position: relative;
-  z-index: 1;
-}
-
 .progress-bar {
   width: 80px;
   height: 4px;
@@ -290,20 +310,5 @@ const toggleDay = (habitId, dayIndex) => {
   height: 100%;
   background-color: var(--success-color);
   transition: width var(--transition-normal);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .dashboard-header {
-    align-items: flex-start;
-  }
-  
-  .habit-row {
-    flex-wrap: wrap;
-  }
-  
-  .day-icons {
-    margin: 15px 0;
-  }
 }
 </style>

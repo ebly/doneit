@@ -203,23 +203,3 @@ const toggleHabit = (id) => {
     <HabitForm v-if="showAddForm" @add="addHabit" @cancel="showAddForm = false" />
   </div>
 </template>
-
-<style scoped>
-/* 响应式设计 - 保留组件内的布局调整 */
-@media (max-width: 768px) {
-  .header {
-    padding: 15px 20px;
-  }
-
-  .main-content {
-    padding: 20px;
-    max-width: 100%;
-  }
-
-  .content-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-}
-</style>
