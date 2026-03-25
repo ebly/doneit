@@ -51,5 +51,5 @@ export default defineConfig({
       }
     }
   },
-  base: '/doneit/'  // 设置正确的base路径
+  base: '/doneit/'  // 设置正确的base路径，用于GitHub Pages
 })
