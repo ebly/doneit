@@ -6,6 +6,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/doneit/',   // 仓库名
   plugins: [
     vue(),
     // 自动导入Element Plus组件
@@ -50,6 +51,5 @@ export default defineConfig({
         assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
-  },
-  base: '/doneit/'  // 设置正确的base路径
+  }
 })
