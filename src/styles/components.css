@@ -1,0 +1,215 @@
+/* ===================================
+   组件共享样式
+   所有组件共用的样式统一放在这里
+   =================================== */
+
+/* ----- 习惯信息样式 ----- */
+.habit-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  padding-left: 10px;
+}
+
+.habit-icon {
+  font-size: 24px;
+}
+
+.habit-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ----- 习惯容器 ----- */
+.habits-container {
+  width: 100%;
+}
+
+/* ----- 空状态 ----- */
+.empty-state {
+  margin: 40px 0;
+}
+
+/* ----- 提醒相关样式 ----- */
+.no-reminder {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.no-reminders {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.reminders-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ----- 星期选择器 ----- */
+.days-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.no-days {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ----- 表单样式 ----- */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* 网站蓝色按钮样式 */
+.site-primary-button {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.site-primary-button:hover {
+  background-color: var(--primary-dark) !important;
+}
+
+/* ----- 标题样式 ----- */
+.section-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* ----- 习惯详情 ----- */
+.habit-detail {
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.habit-detail h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.detail-item {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.detail-label {
+  font-weight: bold;
+  width: 100px;
+  color: var(--text-primary);
+}
+
+.detail-value {
+  flex: 1;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+/* ----- 进度条 ----- */
+.progress-bar {
+  width: 80px;
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--success-color);
+  transition: width var(--transition-normal);
+}
+
+/* ----- 完成日期标签 ----- */
+.completed-date-tag {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* ----- 星期几选择器 ----- */
+.days-tags-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ----- 提醒输入 ----- */
+.reminder-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reminders-list-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+/* ----- 习惯描述 ----- */
+.habit-description {
+  color: var(--text-light);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ----- 当前提醒 ----- */
+.current-reminders {
+  margin-bottom: 20px;
+}
+
+.current-reminders h4,
+.add-reminder h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.add-reminder-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ----- 对话框内容 ----- */
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ----- 对话框底部 ----- */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+}
