@@ -101,6 +101,7 @@ body.dark-mode .main-content {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
 /* 移除卡片内部padding */
@@ -139,8 +140,14 @@ body.dark-mode .main-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow-y: auto;
   height: 100%;
+  overflow-y: auto;
+}
+
+/* Stats 视图激活时，禁用 main-content 的滚动并移除 padding */
+.main-content.stats-view-active {
+  overflow: hidden;
+  padding: 0;
 }
 
 /* 移动设备适配 */
@@ -212,6 +219,202 @@ body.dark-mode .main-content {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+/* Stats 页面样式 */
+.stats-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.stats-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* 自定义滚动条样式 */
+.stats-tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stats-tab-content::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+.stats-tab-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.stats-tab-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 日历样式 */
+.calendar-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-arrow {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.nav-arrow:hover {
+  color: var(--primary-color);
+}
+
+.nav-arrow:active {
+  transform: scale(0.95);
+}
+
+.calendar-nav h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-nav h3:hover {
+  color: var(--primary-color);
+}
+
+.calendar-nav h3.active {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.calendar-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.calendar-header .el-button {
+  font-size: 14px !important;
+  color: var(--text-secondary);
+  padding: 4px 12px;
+}
+
+.calendar-header .el-button.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.calendar-header .el-button:hover {
+  color: var(--primary-color);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+.calendar-cell:hover {
+  background: var(--bg-tertiary);
+}
+
+.calendar-cell.empty {
+  background: transparent;
+}
+
+.calendar-cell.today {
+  background: var(--primary-color);
+  color: white;
+}
+
+.calendar-cell.today .cell-date {
+  color: white;
+}
+
+.cell-date {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.cell-completions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  margin-top: auto;
+}
+
+.completion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success-color);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.completion-dot:hover {
+  transform: scale(1.2);
+}
+
+.calendar-cell.today .completion-dot {
+  background: white;
+}
+
+.stats-content {
+  text-align: center;
+  color: var(--text-light);
+  padding: 40px 20px;
 }
 
 /* 搜索和按钮容器 */
@@ -294,9 +497,13 @@ button {
   transition: all var(--transition-normal);
 }
 
-/* Element Plus按钮样式覆盖 */
+/* Element Plus 按钮样式覆盖 */
 .el-button {
   border-radius: 4px !important;
+}
+
+.el-button+.el-button {
+  margin-left: 0 !important;
 }
 
 /* 输入框样式 */
