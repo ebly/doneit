@@ -1,12 +1,19 @@
 import localforage from 'localforage'
-// 导入提醒调度器
 import { handleHabitChange, handleReminderSettingsChange, clearHabitReminders } from './reminderScheduler'
 
-// 初始化localforage
+// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+const formatDateToLocal = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// 初始化 localforage
 localforage.config({
   name: 'DoneIt',
   storeName: 'habits',
-  description: '存储DoneIt习惯跟踪应用的用户数据'
+  description: '存储 DoneIt 习惯跟踪应用的用户数据'
 })
 
 // 示例习惯数据
@@ -193,15 +200,13 @@ export const toggleHabitComplete = async (id, date) => {
       return false
     }
     
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateToLocal(date)
     const index = habit.completedDates.indexOf(dateStr)
     
     if (index === -1) {
-      // 标记为完成
       habit.completedDates.push(dateStr)
       console.log('[DEBUG] 标记习惯为完成:', habit.name, '日期:', dateStr)
     } else {
-      // 取消完成
       habit.completedDates.splice(index, 1)
       console.log('[DEBUG] 取消习惯完成状态:', habit.name, '日期:', dateStr)
     }
@@ -221,7 +226,7 @@ export const isHabitCompleted = async (id, date) => {
     const habit = await getHabit(id)
     if (!habit) return false
     
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateToLocal(date)
     return habit.completedDates.includes(dateStr)
   } catch (error) {
     console.error('检查习惯完成状态失败:', error)

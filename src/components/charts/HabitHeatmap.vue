@@ -24,6 +24,14 @@ const props = defineProps({
 const chartDom = ref(null)
 const chartInstance = ref(null)
 
+// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+const formatDateToLocal = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // 生成热力图数据
 const heatmapData = computed(() => {
   const days = parseInt(props.dateRange) || 365
@@ -35,7 +43,7 @@ const heatmapData = computed(() => {
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateToLocal(date)
     
     let completedCount = 0
     
@@ -98,7 +106,7 @@ const initChart = () => {
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateToLocal(date)
     
     let completedCount = 0
     habits.forEach(habit => {
@@ -140,11 +148,11 @@ const initChart = () => {
       max: 1,
       inRange: {
         color: [
-          '#ebedf0',           // 0% - 灰色
-          'rgba(39, 174, 96, 0.3)', // 30%
-          'rgba(39, 174, 96, 0.5)', // 50%
-          'rgba(39, 174, 96, 0.7)', // 70%
-          'rgba(39, 174, 96, 1)'    // 100% - 完全不透明
+          '#ebedf0',  // 0% - 灰色
+          '#98FB98',  // 30% - 浅绿色
+          '#3CB371',  // 50% - 中等绿色
+          '#2E8B57',  // 70% - 深绿色
+          '#27AE60'   // 100% - 完全不透明绿色
         ]
       }
     },

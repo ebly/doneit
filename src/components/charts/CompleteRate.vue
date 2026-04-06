@@ -59,7 +59,9 @@ const chartData = computed(() => {
     let completedDays = 0
 
     props.habit.completedDates.forEach(dateStr => {
-      const completedDate = new Date(dateStr)
+      // 使用本地时间解析日期，避免时区问题
+      const [y, m, d] = dateStr.split('-').map(Number)
+      const completedDate = new Date(y, m - 1, d)
       if (completedDate.getFullYear() === year && completedDate.getMonth() === month) {
         completedDays++
       }

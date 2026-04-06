@@ -24,6 +24,14 @@ const props = defineProps({
 const chartDom = ref(null)
 const chartInstance = ref(null)
 
+// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+const formatDateToLocal = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // 生成图表数据
 const chartData = computed(() => {
   const days = parseInt(props.dateRange) || 30
@@ -35,7 +43,7 @@ const chartData = computed(() => {
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = formatDateToLocal(date)
     dates.push(dateStr)
 
     if (props.isAllHabits) {

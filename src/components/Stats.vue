@@ -5,6 +5,14 @@ import CompleteRate from './charts/CompleteRate.vue'
 import MaxStreakDays from './charts/MaxStreakDays.vue'
 import HabitHeatmap from './charts/HabitHeatmap.vue'
 
+// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+const formatDateToLocal = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // 接收习惯数据作为 props
 const props = defineProps({
   habits: {
@@ -96,7 +104,7 @@ const stats = computed(() => {
 
       if (!isToday && !isYesterday) {
         // 检查昨天是否所有习惯都不需要打卡
-        const yesterdayStr = yesterday.toISOString().split('T')[0]
+        const yesterdayStr = formatDateToLocal(yesterday)
         const hasHabitsYesterday = props.habits.some(habit => {
           if (!habit.daysPerWeek || habit.daysPerWeek.length === 0) {
             return true // 没有配置，默认每天都需要
@@ -135,7 +143,7 @@ const stats = computed(() => {
           for (let j = 1; j < diffDays; j++) {
             const skipDate = new Date(prevDate)
             skipDate.setDate(skipDate.getDate() + j)
-            const skipDateStr = skipDate.toISOString().split('T')[0]
+            const skipDateStr = formatDateToLocal(skipDate)
             
             // 检查这天是否有习惯需要打卡
             const hasHabitsOnSkipDay = props.habits.some(habit => {

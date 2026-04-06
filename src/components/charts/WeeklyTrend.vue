@@ -12,6 +12,14 @@ const props = defineProps({
 const chartDom = ref(null)
 const chartInstance = ref(null)
 
+// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+const formatDateToLocal = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // 生成最近 6 周的日期范围标签
 const generateWeekLabels = () => {
   const today = new Date()
@@ -60,7 +68,9 @@ const getWeeklyData = () => {
   // 遍历打卡记录
   props.habit.completedDates.forEach(dateStr => {
     const datePart = dateStr.split(' ')[0]
-    const completedDate = new Date(datePart)
+    // 使用本地时间解析日期，避免时区问题
+    const [year, month, day] = datePart.split('-').map(Number)
+    const completedDate = new Date(year, month - 1, day)
     
     // 检查是否在 6 周内
     if (completedDate < sixWeeksAgoSunday || completedDate > today) {
