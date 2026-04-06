@@ -55,7 +55,6 @@ h6 {
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.2;
-  margin-bottom: 1rem;
 }
 
 h1 {
@@ -84,12 +83,13 @@ body.dark-mode .main-content {
   background-color: var(--bg-primary);
 }
 
-/* App组件样式 */
+/* App 组件样式 */
 .app-container {
   display: flex;
   margin: 0 auto;
   min-height: 100vh;
   background-color: var(--bg-secondary);
+  min-width: 500px;
 }
 
 /* PC 端布局 */
@@ -98,10 +98,10 @@ body.dark-mode .main-content {
   background: var(--bg-primary);
   box-shadow: var(--shadow-md);
   overflow: visible;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100vh;
 }
 
 /* 移除卡片内部padding */
@@ -135,19 +135,12 @@ body.dark-mode .main-content {
 /* 主要内容样式 */
 .main-content {
   flex: 1;
-  min-width: 300px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   height: 100%;
   overflow-y: auto;
-}
-
-/* Stats 视图激活时，禁用 main-content 的滚动并移除 padding */
-.main-content.stats-view-active {
-  overflow: hidden;
-  padding: 0;
 }
 
 /* 移动设备适配 */
@@ -222,41 +215,12 @@ body.dark-mode .main-content {
 }
 
 /* Stats 页面样式 */
-.stats-view {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.stats-tab-content {
+.stats-content {
   flex: 1;
   overflow-y: auto;
-  padding: 10px;
-}
-
-/* 自定义滚动条样式 */
-.stats-tab-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.stats-tab-content::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border-radius: 3px;
-}
-
-.stats-tab-content::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
-}
-
-.stats-tab-content::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
-/* 日历样式 */
-.calendar-container {
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-light);
 }
 
 .calendar-header {
@@ -267,14 +231,23 @@ body.dark-mode .main-content {
   padding: 20px;
 }
 
-.calendar-nav {
+.calendar-header-nav {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
+}
+
+.calendar-header-nav h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0 50px;
 }
 
 .nav-arrow {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
@@ -288,29 +261,7 @@ body.dark-mode .main-content {
 
 .nav-arrow:hover {
   color: var(--primary-color);
-}
-
-.nav-arrow:active {
-  transform: scale(0.95);
-}
-
-.calendar-nav h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.calendar-nav h3:hover {
-  color: var(--primary-color);
-}
-
-.calendar-nav h3.active {
-  color: var(--primary-color);
-  font-weight: 700;
+  transform: scale(1.1);
 }
 
 .calendar-header h3 {
@@ -351,12 +302,12 @@ body.dark-mode .main-content {
 
 .calendar-cell {
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--bg-secondary);
   padding: 8px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   min-height: 80px;
   transition: all 0.2s ease;
@@ -390,31 +341,56 @@ body.dark-mode .main-content {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  justify-content: center;
-  margin-top: auto;
+  justify-content: flex-start;
+  overflow-y: auto;
+  width: 100%;
 }
 
-.completion-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.completion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 12px;
   background: var(--success-color);
+  color: white;
+  font-size: 10px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+  max-width: 100%;
 }
 
-.completion-dot:hover {
-  transform: scale(1.2);
+.completion-tag:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
-.calendar-cell.today .completion-dot {
+.completion-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.completion-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.calendar-cell.today .completion-tag {
   background: white;
+  color: var(--success-color);
 }
 
 .stats-content {
   text-align: center;
   color: var(--text-light);
   padding: 40px 20px;
+}
+
+.chart-container {
+  width: 100%;
+  height: 400px;
 }
 
 /* 搜索和按钮容器 */

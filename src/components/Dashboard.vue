@@ -49,8 +49,12 @@ const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 // 检查习惯在特定日期是否完成
 const isHabitCompletedOnDate = (habit, date) => {
   if (!habit.completedDates) return false
-  const dateStr = date.toISOString().split('T')[0]
-  return habit.completedDates.includes(dateStr)
+  // 使用本地时间格式化，避免时区问题
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+  return habit.completedDates.some(d => d.startsWith(dateStr))
 }
 
 // 检查某一天是否在习惯的 daysPerWeek 中
@@ -65,7 +69,10 @@ const isDayEnabled = (habit, dayIndex) => {
 // 检查日期是否是今天
 const isToday = (date) => {
   const today = new Date()
-  return date.toISOString().split('T')[0] === today.toISOString().split('T')[0]
+  // 使用本地时间比较，避免时区问题
+  return date.getFullYear() === today.getFullYear() &&
+         date.getMonth() === today.getMonth() &&
+         date.getDate() === today.getDate()
 }
 
 // 检查当前时间是否在提醒时间的 ±1 小时范围内
@@ -180,7 +187,8 @@ const checkReminderWindow = () => {
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
   const currentTimeInMinutes = currentHour * 60 + currentMinute
-  const today = now.toISOString().split('T')[0]
+  // 使用本地时间格式化，避免时区问题
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const currentDayIndex = now.getDay()
 
   const habitsToTrack = []

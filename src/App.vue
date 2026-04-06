@@ -5,6 +5,8 @@ const HabitList = defineAsyncComponent(() => import('./components/HabitList.vue'
 const HabitForm = defineAsyncComponent(() => import('./components/HabitForm.vue'))
 const Dashboard = defineAsyncComponent(() => import('./components/Dashboard.vue'))
 const ReminderSettings = defineAsyncComponent(() => import('./components/ReminderSettings.vue'))
+const Calendar = defineAsyncComponent(() => import('./components/Calendar.vue'))
+import Stats from './components/Stats.vue'
 import { Sunny, Moon, Search } from '@element-plus/icons-vue'
 // 导入存储服务
 import { getHabits, addHabit as addHabitToStorage, updateHabit, deleteHabit as deleteHabitFromStorage, toggleHabitComplete } from './services/storage.js'
@@ -19,75 +21,6 @@ const searchValue = ref('')
 
 // 当前视图
 const currentView = ref('dashboard')
-
-// 统计视图激活标签页
-const statsActiveTab = ref('days')
-
-// 日历相关状态
-const currentDate = ref(new Date())
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-// 日历相关计算属性
-const currentMonthLabel = computed(() => {
-  const year = currentDate.value.getFullYear()
-  const month = currentDate.value.toLocaleString('en-US', { month: 'short' })
-  return `${month} ${year}`
-})
-
-const calendarCells = computed(() => {
-  const year = currentDate.value.getFullYear()
-  const month = currentDate.value.getMonth()
-  
-  // 获取当月第一天
-  const firstDay = new Date(year, month, 1)
-  // 获取当月最后一天
-  const lastDay = new Date(year, month + 1, 0)
-  // 获取第一天是星期几
-  const firstDayOfWeek = firstDay.getDay()
-  // 获取当月总天数
-  const totalDays = lastDay.getDate()
-  
-  const cells = []
-  const today = new Date()
-  
-  // 添加空单元格（上个月的）
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    cells.push({ isEmpty: true })
-  }
-  
-  // 添加日期单元格
-  for (let day = 1; day <= totalDays; day++) {
-    const cellDate = new Date(year, month, day)
-    const dateStr = cellDate.toISOString().split('T')[0] // YYYY-MM-DD
-    
-    // 查找这一天完成的习惯
-    const completions = habits.value.filter(habit => {
-      if (!habit.completedDates) return false
-      return habit.completedDates.some(completedDate => {
-        const completedDateStr = completedDate.split(' ')[0]
-        return completedDateStr === dateStr
-      })
-    })
-    
-    cells.push({
-      date: day,
-      isEmpty: false,
-      isToday: cellDate.toDateString() === today.toDateString(),
-      completions: completions.length > 0 ? completions : null
-    })
-  }
-  
-  return cells
-})
-
-// 切换月份
-const previousMonth = () => {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1)
-}
-
-const nextMonth = () => {
-  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1)
-}
 
 // 习惯列表
 const habits = ref([])
@@ -146,9 +79,39 @@ const loadMockDataScript = async () => {
       }
     }
     
+    // 添加删除特定日期打卡记录的方法
+    window.removeCompletionsByDate = async (dateStr) => {
+      try {
+        const habits = await getHabits()
+        let removedCount = 0
+        
+        for (const habit of habits) {
+          if (!habit.completedDates) continue
+          
+          const initialLength = habit.completedDates.length
+          habit.completedDates = habit.completedDates.filter(d => !d.startsWith(dateStr))
+          const removed = initialLength - habit.completedDates.length
+          
+          if (removed > 0) {
+            removedCount += removed
+            await updateHabit(habit.id, { completedDates: habit.completedDates })
+            console.log(`从习惯 "${habit.name}" 删除了 ${removed} 条 ${dateStr} 的记录`)
+          }
+        }
+        
+        await loadHabits()
+        console.log(`\n总共删除了 ${removedCount} 条 ${dateStr} 的打卡记录`)
+        return removedCount
+      } catch (error) {
+        console.error('[ERROR] 删除记录失败:', error)
+        return 0
+      }
+    }
+    
     console.log('[INFO] 模拟数据生成脚本已加载')
     console.log('[INFO] 使用方法：在浏览器控制台输入 generateMockData() 并回车')
     console.log('[INFO] 查看数据：在浏览器控制台输入 printHabits() 并回车')
+    console.log('[INFO] 删除 7 号记录：在浏览器控制台输入 removeCompletionsByDate("2026-04-07") 并回车')
   } catch (error) {
     console.error('[ERROR] 加载模拟数据脚本失败:', error)
   }
@@ -226,6 +189,7 @@ const toggleHabit = async (id) => {
           <nav class="nav">
             <a href="#" class="nav-link" :class="{ active: currentView === 'dashboard' }" @click.prevent="currentView = 'dashboard'">Dashboard</a>
             <a href="#" class="nav-link" :class="{ active: currentView === 'myhabits' }" @click.prevent="currentView = 'myhabits'">My Habits</a>
+            <a href="#" class="nav-link" :class="{ active: currentView === 'calendar' }" @click.prevent="currentView = 'calendar'">Calendar</a>
             <a href="#" class="nav-link" :class="{ active: currentView === 'stats' }" @click.prevent="currentView = 'stats'">Stats</a>
             <a href="#" class="nav-link" :class="{ active: currentView === 'settings' }" @click.prevent="currentView = 'settings'">Settings</a>
           </nav>
@@ -234,7 +198,7 @@ const toggleHabit = async (id) => {
         </div>
       </header>
 
-      <main class="main-content" :class="{ 'stats-view-active': currentView === 'stats' }">
+      <main class="main-content">
         <!-- Dashboard 视图 -->
         <Dashboard v-if="currentView === 'dashboard'" :habits="habits" @update:habits="newHabits => habits = newHabits" />
 
@@ -259,60 +223,17 @@ const toggleHabit = async (id) => {
           <HabitList :habits="habits" :search-value="searchValue" @edit="startEditHabit" @delete="deleteHabit" />
         </template>
 
+        <!-- Calendar 视图 -->
+        <Calendar v-else-if="currentView === 'calendar'" :habits="habits" />
+
         <!-- Stats 视图 -->
-        <template v-else-if="currentView === 'stats'">
-          <div class="stats-view">
-            <div class="calendar-header">
-              <div class="calendar-nav">
-                <div class="nav-arrow" @click="previousMonth">
-                  <
-                </div>
-                <h3 :class="{ 'active': statsActiveTab === 'days' }" @click="statsActiveTab = 'days'">{{ currentMonthLabel }}</h3>
-                <div class="nav-arrow" @click="nextMonth">
-                  >
-                </div>
-              </div>
-              <el-button link :class="{ 'active': statsActiveTab === 'weeks' }" @click="statsActiveTab = 'weeks'">
-                Weeks
-              </el-button>
-              <el-button link :class="{ 'active': statsActiveTab === 'months' }" @click="statsActiveTab = 'months'">
-                Months
-              </el-button>
-              <el-button link :class="{ 'active': statsActiveTab === 'years' }" @click="statsActiveTab = 'years'">
-                Years
-              </el-button>
-            </div>
-            
-            <div class="stats-tab-content">
-              <!-- Days 标签页内容（日历视图） -->
-              <div v-if="statsActiveTab === 'days'" class="calendar-container">
-                <div class="calendar-grid">
-                  <div class="calendar-weekday" v-for="day in weekDays" :key="day">{{ day }}</div>
-                  <div 
-                    v-for="(cell, index) in calendarCells" 
-                    :key="index"
-                    class="calendar-cell"
-                    :class="{ 'empty': cell.isEmpty, 'today': cell.isToday }"
-                  >
-                    <div class="cell-date">{{ cell.date }}</div>
-                    <div v-if="!cell.isEmpty && cell.completions" class="cell-completions">
-                      <div 
-                        v-for="(habit, hIndex) in cell.completions" 
-                        :key="hIndex"
-                        class="completion-dot"
-                        :title="habit.name"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
+        <Stats v-else-if="currentView === 'stats'" :habits="habits" />
 
         <!-- Settings 视图 -->
         <template v-else-if="currentView === 'settings'">
-          <ReminderSettings />
+          <div class="coming-soon-container">
+            <p class="coming-soon-text">Coming Soon</p>
+          </div>
         </template>
       </main>
     </div>
@@ -324,4 +245,21 @@ const toggleHabit = async (id) => {
 
 <style scoped>
 /* 布局样式保持不变 */
+
+.coming-soon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.coming-soon-text {
+  font-size: 24px;
+  color: #999;
+  font-weight: 500;
+}
+
+.dark-mode .coming-soon-text {
+  color: #666;
+}
 </style>

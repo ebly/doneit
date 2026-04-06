@@ -1,10 +1,5 @@
 /**
- * 模拟数据生成工具
- * 使用方法：在浏览器控制台执行 generateMockData()
- */
-
-/**
- * 生成过去 2 周的模拟数据
+ * 生成过去 3-4 个月的模拟数据
  * @param {Function} getHabits - 获取所有习惯的方法
  * @param {Function} updateHabit - 更新习惯的方法
  * @param {Function} loadHabits - 重新加载习惯的方法
@@ -21,41 +16,53 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
     }
     
     const today = new Date()
-    const twoWeeksAgo = new Date(today)
-    twoWeeksAgo.setDate(today.getDate() - 14)
+    // 获取当前月份的 1 号
+    const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    // 从 4 个月前的 1 号开始生成数据
+    const startDate = new Date(firstDayOfCurrentMonth)
+    startDate.setMonth(startDate.getMonth() - 4) // 4 个月前的 1 号
+    
+    console.log(`[INFO] 数据生成范围：${startDate.toISOString().split('T')[0]} 到 ${today.toISOString().split('T')[0]}`)
     
     // 为每个习惯生成随机的完成日期
     for (const habit of habits) {
       const completedDates = []
       
-      // 遍历过去 14 天
-      for (let d = new Date(twoWeeksAgo); d <= today; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0] // YYYY-MM-DD
+      console.log(`[INFO] 处理习惯：${habit.name}, daysPerWeek: ${habit.daysPerWeek?.join(',')}`)
+      
+      // 遍历从 startDate 到 today 的所有日期
+      for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
+        // 使用本地时间格式化，避免时区问题
+        const year = d.getFullYear()
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        const dateStr = `${year}-${month}-${day}`
         
         // 检查这一天是否在习惯的 daysPerWeek 中
         const dayOfWeek = d.getDay().toString()
-        const shouldCompleteOnThisDay = habit.daysPerWeek.includes(dayOfWeek)
+        const shouldCompleteOnThisDay = habit.daysPerWeek && habit.daysPerWeek.includes(dayOfWeek)
         
         if (shouldCompleteOnThisDay) {
           // 70% 的概率完成习惯
           const completed = Math.random() < 0.7
           if (completed) {
-            // 基于提醒时间生成随机时间（前后 1 小时范围，分钟随机）
+            // 基于提醒时间生成随机时间（±1 小时范围）
             let timeStr
             if (habit.reminders && habit.reminders.length > 0) {
               // 随机选择一个提醒时间
               const randomReminder = habit.reminders[Math.floor(Math.random() * habit.reminders.length)]
               const [reminderHour, reminderMinute] = randomReminder.split(':').map(Number)
               
-              // 在提醒时间前后 1 小时内随机（-1 小时到 +1 小时）
-              const hourOffset = Math.floor(Math.random() * 3) - 1 // -1, 0, 1
+              // 在提醒时间前后 1 小时内随机（-60 分钟到 +60 分钟）
+              const minuteOffset = Math.floor(Math.random() * 121) - 60 // -60 到 +60
               
-              let hour = reminderHour + hourOffset
-              // 分钟在 0-59 之间随机
-              let minute = Math.floor(Math.random() * 60)
+              let totalMinutes = reminderHour * 60 + reminderMinute + minuteOffset
               
-              // 处理小时进位和借位（24 小时制）
-              hour = ((hour % 24) + 24) % 24
+              // 处理跨天情况（24 小时制）
+              totalMinutes = ((totalMinutes % 1440) + 1440) % 1440
+              
+              const hour = Math.floor(totalMinutes / 60)
+              const minute = totalMinutes % 60
               
               timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
             } else {
