@@ -172,9 +172,9 @@ const initReminderScheduler = async () => {
   // 设置所有提醒
   await setupAllReminders()
   
-  // 每分钟检查一次（作为备份机制）
+  // Check every minute (as a backup mechanism)
   setInterval(async () => {
-    console.log('[REMINDER] 执行每分钟检查')
+    console.log('[REMINDER] Executing per-minute check')
     try {
       const habits = await getHabitsWithReminders()
       const settings = await getReminderSettings()
@@ -189,9 +189,9 @@ const initReminderScheduler = async () => {
         }
       }
     } catch (error) {
-      console.error('[REMINDER] 每分钟检查时发生错误:', error)
+      console.error('[REMINDER] Error during per-minute check:', error)
     }
-  }, 60000) // 每分钟检查一次
+  }, 60000) // Check every minute
 }
 
 export {

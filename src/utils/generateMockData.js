@@ -46,19 +46,19 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
           // 70% 的概率完成习惯
           const completed = Math.random() < 0.7
           if (completed) {
-            // 基于提醒时间生成随机时间（±1 小时范围）
+            // Generate random time based on reminder time (±1 Hour range)
             let timeStr
             if (habit.reminders && habit.reminders.length > 0) {
               // 随机选择一个提醒时间
               const randomReminder = habit.reminders[Math.floor(Math.random() * habit.reminders.length)]
               const [reminderHour, reminderMinute] = randomReminder.split(':').map(Number)
               
-              // 在提醒时间前后 1 小时内随机（-60 分钟到 +60 分钟）
+              // Random within ±1 Hour of reminder time (-60 minutes to +60 minutes)
               const minuteOffset = Math.floor(Math.random() * 121) - 60 // -60 到 +60
               
               let totalMinutes = reminderHour * 60 + reminderMinute + minuteOffset
               
-              // 处理跨天情况（24 小时制）
+              // Handle cross-day situation (24 Hour format)
               totalMinutes = ((totalMinutes % 1440) + 1440) % 1440
               
               const hour = Math.floor(totalMinutes / 60)

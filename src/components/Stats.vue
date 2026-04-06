@@ -5,7 +5,7 @@ import CompleteRate from './charts/CompleteRate.vue'
 import MaxStreakDays from './charts/MaxStreakDays.vue'
 import HabitHeatmap from './charts/HabitHeatmap.vue'
 
-// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+// Convert date to local date string (YYYY-MM-DD format)
 const formatDateToLocal = (date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -13,7 +13,7 @@ const formatDateToLocal = (date) => {
   return `${year}-${month}-${day}`
 }
 
-// 接收习惯数据作为 props
+// Receive habit data as props
 const props = defineProps({
   habits: {
     type: Array,
@@ -21,18 +21,31 @@ const props = defineProps({
   }
 })
 
-// 当前选中的 habit，默认选择第一个
-const selectedHabitId = ref('all') // 默认为 'all' 表示所有习惯
-const dateRange = ref('30') // 默认 Last 30 Days
+// Selected habit, default select first
+const selectedHabitId = ref('all') // Default 'all' means all habits
+const dateRange = ref('30') // Default Last 30 Days
 
-// 监听 habits 变化，但不自动选择，默认就是 'all'
-watch(() => props.habits, (newHabits) => {
-  // 保持默认值 'all'
-}, { immediate: true })
+// Listen for habits changes, but don't auto select, default is 'all'
+watch(() => props.habits, (newHabits, oldHabits) => {
+  console.log('[DEBUG] Stats: Habits prop changed')
+  console.log('[DEBUG] Stats: Old habits count:', oldHabits?.length)
+  console.log('[DEBUG] Stats: New habits count:', newHabits.length)
+  if (newHabits.length > 0) {
+    newHabits.forEach((habit, index) => {
+      console.log(`[DEBUG] Stats: Habit ${index}: ${habit.name}, completed: ${habit.completedDates?.length || 0}`)
+    })
+  }
+  // Keep default value 'all'
+}, { immediate: true, deep: true })
 
-// 计算总体统计数据
+// Calculate overall statistics
 const stats = computed(() => {
+  console.log('[DEBUG] Stats: Computing stats...')
+  console.log('[DEBUG] Stats: isAllHabits:', selectedHabitId.value === 'all' || !selectedHabitId.value)
+  console.log('[DEBUG] Stats: dateRange:', dateRange.value)
+  
   if (!props.habits || props.habits.length === 0) {
+    console.log('[DEBUG] Stats: No habits, returning zeros')
     return {
       currentStreak: 0,
       completionRate: 0,
@@ -40,14 +53,14 @@ const stats = computed(() => {
     }
   }
 
-  // 根据选中的习惯计算
+  // Calculate based on selected habit
   const habitsToCalculate = selectedHabitId.value && selectedHabitId.value !== 'all'
     ? props.habits.filter(h => h.id === selectedHabitId.value)
     : props.habits
 
   const isAllHabits = selectedHabitId.value === 'all' || !selectedHabitId.value
 
-  // 计算日期范围
+  // Calculate date range
   const today = new Date()
   const daysToSubtract = parseInt(dateRange.value) || 30
   const startDate = new Date(today)
@@ -56,24 +69,38 @@ const stats = computed(() => {
   let totalCheckins = 0
   let maxStreak = 0
 
+  console.log('[DEBUG] Stats: Calculating for', isAllHabits ? 'all habits' : 'single habit')
+  console.log('[DEBUG] Stats: Habits count:', habitsToCalculate.length)
+  
   if (isAllHabits && props.habits.length > 0) {
-    // All Habits 模式：统计所有习惯都完成的天数
+    // All Habits mode: count days when all habits are completed
     const allDates = new Set()
     
-    // 收集所有日期
+    // Collect all dates
     props.habits.forEach(habit => {
       if (!habit.completedDates) return
       
+      console.log('[DEBUG] Stats: Habit', habit.name, 'has', habit.completedDates.length, 'completions')
+      
       habit.completedDates.forEach(dateStr => {
         const datePart = dateStr.split(' ')[0]
-        const checkinDate = new Date(datePart)
-        if (checkinDate >= startDate && checkinDate <= today) {
+        // Parse date as local time to avoid timezone issues
+        const [year, month, day] = datePart.split('-').map(Number)
+        const checkinDate = new Date(year, month - 1, day)
+        
+        // Compare dates at midnight local time
+        const startDateMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        
+        if (checkinDate >= startDateMidnight && checkinDate <= todayMidnight) {
           allDates.add(datePart)
         }
       })
     })
 
-    // 检查每一天是否所有习惯都完成了
+    console.log('[DEBUG] Stats: All dates in range:', Array.from(allDates))
+
+    // Check each day if all habits are completed
     let completedDays = []
     allDates.forEach(dateStr => {
       const allCompleted = props.habits.every(habit => {
@@ -174,14 +201,21 @@ const stats = computed(() => {
       maxStreak = streak
     }
   } else {
-    // 单个习惯模式
+    // Single habit mode
     habitsToCalculate.forEach(habit => {
       if (!habit.completedDates) return
 
-      // 过滤日期范围内的打卡记录
+      // Filter check-in records within date range
       const filteredDates = habit.completedDates.filter(dateStr => {
-        const checkinDate = new Date(dateStr.split(' ')[0])
-        return checkinDate >= startDate && checkinDate <= today
+        const datePart = dateStr.split(' ')[0]
+        const [year, month, day] = datePart.split('-').map(Number)
+        const checkinDate = new Date(year, month - 1, day)
+        
+        // Compare dates at midnight local time
+        const startDateMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        
+        return checkinDate >= startDateMidnight && checkinDate <= todayMidnight
       })
 
       totalCheckins += filteredDates.length

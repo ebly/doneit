@@ -1,7 +1,7 @@
 import localforage from 'localforage'
 import { handleHabitChange, handleReminderSettingsChange, clearHabitReminders } from './reminderScheduler'
 
-// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+// Convert date to local date string (YYYY-MM-DD format)
 const formatDateToLocal = (date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -9,21 +9,21 @@ const formatDateToLocal = (date) => {
   return `${year}-${month}-${day}`
 }
 
-// 初始化 localforage
+// Initialize localforage
 localforage.config({
   name: 'DoneIt',
   storeName: 'habits',
-  description: '存储 DoneIt 习惯跟踪应用的用户数据'
+  description: 'User data for DoneIt habit tracking application'
 })
 
-// 示例习惯数据
+// Sample habit data
 const sampleHabits = [
   {
     id: '1',
     name: 'Morning Exercise',
     description: 'Exercise for 30 minutes every morning at 6 AM',
     frequency: 'daily',
-    reminders: ['06:00'], // 提醒时间数组
+    reminders: ['06:00'], // Reminder times array
     daysPerWeek: ['1', '2', '3', '4', '5'],
     createdAt: new Date().toISOString(),
     completedDates: []
@@ -50,62 +50,62 @@ const sampleHabits = [
   }
 ]
 
-// 示例提醒设置
+// Sample reminder settings
 const sampleReminderSettings = {
   enabled: true,
   soundEnabled: true,
   vibrationEnabled: true
 }
 
-// 初始化数据库，如果没有数据则添加示例数据
+// Initialize database, add sample data if no data exists
 const initDatabase = async () => {
   try {
-    // 初始化习惯数据
+    // Initialize habit data
     const habits = await localforage.getItem('habits')
     if (!habits || habits.length === 0) {
       await localforage.setItem('habits', sampleHabits)
-      console.log('[DEBUG] 数据库初始化完成，已添加示例习惯', sampleHabits)
+      console.log('[DEBUG] Database initialized, sample habits added', sampleHabits)
     } else {
-      console.log('[DEBUG] 数据库已存在，已加载', habits.length, '个习惯')
+      console.log('[DEBUG] Database already exists, loaded', habits.length, 'habits')
     }
     
-    // 初始化提醒设置
+    // Initialize reminder settings
     const reminderSettings = await localforage.getItem('reminderSettings')
     if (!reminderSettings) {
       await localforage.setItem('reminderSettings', sampleReminderSettings)
-      console.log('[DEBUG] 提醒设置初始化完成，已添加默认设置', sampleReminderSettings)
+      console.log('[DEBUG] Reminder settings initialized, default settings added', sampleReminderSettings)
     } else {
-      console.log('[DEBUG] 提醒设置已存在', reminderSettings)
+      console.log('[DEBUG] Reminder settings already exist', reminderSettings)
     }
   } catch (error) {
-    console.error('[DEBUG] 初始化数据库失败:', error)
+    console.error('[DEBUG] Database initialization failed:', error)
   }
 }
 
-// 获取所有习惯
+// Get all habits
 export const getHabits = async () => {
   try {
     const habits = await localforage.getItem('habits')
-    console.log('[DEBUG] 获取所有习惯:', habits || [])
+    console.log('[DEBUG] Get all habits:', habits || [])
     return habits || []
   } catch (error) {
-    console.error('[DEBUG] 获取习惯失败:', error)
+    console.error('[DEBUG] Get habits failed:', error)
     return []
   }
 }
 
-// 获取单个习惯
+// Get single habit
 export const getHabit = async (id) => {
   try {
     const habits = await getHabits()
     return habits.find(habit => habit.id === id)
   } catch (error) {
-    console.error('获取单个习惯失败:', error)
+    console.error('Get habit failed:', error)
     return null
   }
 }
 
-// 添加习惯
+// Add habit
 export const addHabit = async (habit) => {
   try {
     const habits = await getHabits()
@@ -118,85 +118,85 @@ export const addHabit = async (habit) => {
     }
     habits.push(newHabit)
     await localforage.setItem('habits', habits)
-    console.log('[DEBUG] 成功添加习惯:', newHabit)
+    console.log('[DEBUG] Successfully added habit:', newHabit)
     
-    // 通知提醒调度器新习惯已添加
+    // Notify reminder scheduler that new habit has been added
     handleHabitChange(newHabit)
     
     return newHabit
   } catch (error) {
-    console.error('[DEBUG] 添加习惯失败:', error)
+    console.error('[DEBUG] Add habit failed:', error)
     return null
   }
 }
 
-// 更新习惯
+// Update habit
 export const updateHabit = async (id, updatedData) => {
   try {
     const habits = await getHabits()
     const index = habits.findIndex(habit => habit.id === id)
     if (index === -1) {
-      console.log('[DEBUG] 未找到要更新的习惯，ID:', id)
+      console.log('[DEBUG] Habit not found, ID:', id)
       return null
     }
     
-    console.log('[DEBUG] 原始习惯数据:', habits[index])
-    console.log('[DEBUG] 更新数据:', updatedData)
+    console.log('[DEBUG] Original habit data:', habits[index])
+    console.log('[DEBUG] Update data:', updatedData)
     
     const updatedHabit = {
       ...habits[index],
       ...updatedData
     }
     
-    console.log('[DEBUG] 更新后的习惯数据:', updatedHabit)
+    console.log('[DEBUG] Updated habit data:', updatedHabit)
     
     habits[index] = updatedHabit
     await localforage.setItem('habits', habits)
-    console.log('[DEBUG] 成功更新习惯:', updatedHabit)
+    console.log('[DEBUG] Successfully updated habit:', updatedHabit)
     
-    // 通知提醒调度器习惯已更新
+    // Notify reminder scheduler that habit has been updated
     handleHabitChange(updatedHabit)
     
     return updatedHabit
   } catch (error) {
-    console.error('[DEBUG] 更新习惯失败:', error)
+    console.error('[DEBUG] Update habit failed:', error)
     return null
   }
 }
 
-// 删除习惯
+// Delete habit
 export const deleteHabit = async (id) => {
   try {
     const habits = await getHabits()
     const filteredHabits = habits.filter(habit => habit.id !== id)
     
     if (filteredHabits.length === habits.length) {
-      console.log('[DEBUG] 未找到要删除的习惯，ID:', id)
-      return false // 没有找到要删除的习惯
+      console.log('[DEBUG] Habit not found, ID:', id)
+      return false // Habit not found
     }
     
     await localforage.setItem('habits', filteredHabits)
-    console.log('[DEBUG] 成功删除习惯，ID:', id)
-    console.log('[DEBUG] 删除后剩余习惯数量:', filteredHabits.length)
+    console.log('[DEBUG] Successfully deleted habit, ID:', id)
+    console.log('[DEBUG] Remaining habits count:', filteredHabits.length)
     
-    // 通知提醒调度器习惯已删除，清除相关提醒定时器
+    // Notify reminder scheduler that habit has been deleted, clear related timers
     clearHabitReminders(id)
     
     return true
   } catch (error) {
-    console.error('[DEBUG] 删除习惯失败:', error)
+    console.error('[DEBUG] Delete habit failed:', error)
     return false
   }
 }
 
-// 切换习惯完成状态
+// Toggle habit completion status
 export const toggleHabitComplete = async (id, date) => {
   try {
     const habits = await getHabits()
     const habit = habits.find(habit => habit.id === id)
     
     if (!habit) {
-      console.log('[DEBUG] 未找到要切换完成状态的习惯，ID:', id)
+      console.log('[DEBUG] Habit not found, ID:', id)
       return false
     }
     
@@ -205,22 +205,22 @@ export const toggleHabitComplete = async (id, date) => {
     
     if (index === -1) {
       habit.completedDates.push(dateStr)
-      console.log('[DEBUG] 标记习惯为完成:', habit.name, '日期:', dateStr)
+      console.log('[DEBUG] Mark habit as completed:', habit.name, 'date:', dateStr)
     } else {
       habit.completedDates.splice(index, 1)
-      console.log('[DEBUG] 取消习惯完成状态:', habit.name, '日期:', dateStr)
+      console.log('[DEBUG] Cancel habit completion:', habit.name, 'date:', dateStr)
     }
     
     await localforage.setItem('habits', habits)
-    console.log('[DEBUG] 习惯完成状态更新后:', habit)
+    console.log('[DEBUG] Habit completion status updated:', habit)
     return habit
   } catch (error) {
-    console.error('[DEBUG] 切换习惯完成状态失败:', error)
+    console.error('[DEBUG] Toggle habit completion failed:', error)
     return false
   }
 }
 
-// 检查习惯在特定日期是否完成
+// Check if habit is completed on specific date
 export const isHabitCompleted = async (id, date) => {
   try {
     const habit = await getHabit(id)
@@ -229,12 +229,12 @@ export const isHabitCompleted = async (id, date) => {
     const dateStr = formatDateToLocal(date)
     return habit.completedDates.includes(dateStr)
   } catch (error) {
-    console.error('检查习惯完成状态失败:', error)
+    console.error('Check habit completion failed:', error)
     return false
   }
 }
 
-// 导出数据（支持自定义路径）
+// Export data (supports custom path)
 export const exportData = async () => {
   try {
     const habits = await localforage.getItem('habits')
@@ -250,7 +250,7 @@ export const exportData = async () => {
     const jsonString = JSON.stringify(exportData, null, 2)
     const blob = new Blob([jsonString], { type: 'application/json' })
     
-    // 尝试使用 File System Access API（支持自定义路径）
+    // Try to use File System Access API (supports custom path)
     if (typeof window.showSaveFilePicker === 'function') {
       try {
         const handle = await window.showSaveFilePicker({
@@ -263,34 +263,34 @@ export const exportData = async () => {
         const writable = await handle.createWritable()
         await writable.write(blob)
         await writable.close()
-        console.log('[DEBUG] 数据已导出到:', handle.name)
+        console.log('[DEBUG] Data exported to:', handle.name)
         return true
       } catch (err) {
-        // 用户取消或 API 不支持，回退到传统下载方式
+        // User cancelled or API not supported, fallback to traditional download
         if (err.name === 'AbortError') {
-          console.log('[DEBUG] 用户取消了保存操作')
+          console.log('[DEBUG] User cancelled save operation')
           return false
         }
-        console.log('[DEBUG] File System Access API 失败，使用传统下载方式')
+        console.log('[DEBUG] File System Access API failed, using traditional download')
       }
     }
     
-    // 传统下载方式
+    // Traditional download method
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `doneit-backup-${new Date().toISOString().split('T')[0]}.json`
     a.click()
     URL.revokeObjectURL(url)
-    console.log('[DEBUG] 数据已下载')
+    console.log('[DEBUG] Data downloaded')
     return true
   } catch (error) {
-    console.error('导出数据失败:', error)
+    console.error('Export data failed:', error)
     return false
   }
 }
 
-// 导入数据
+// Import data
 export const importData = async (file) => {
   try {
     return new Promise((resolve, reject) => {
@@ -300,12 +300,12 @@ export const importData = async (file) => {
         try {
           const importedData = JSON.parse(e.target.result)
           
-          // 验证数据格式
+          // Validate data format
           if (Array.isArray(importedData)) {
             await localforage.setItem('habits', importedData)
             resolve(true)
           } else {
-            reject(new Error('无效的数据格式'))
+            reject(new Error('Invalid data format'))
           }
         } catch (error) {
           reject(error)
@@ -313,29 +313,29 @@ export const importData = async (file) => {
       }
       
       reader.onerror = () => {
-        reject(new Error('文件读取失败'))
+        reject(new Error('File read failed'))
       }
       
       reader.readAsText(file)
     })
   } catch (error) {
-    console.error('导入数据失败:', error)
+    console.error('Import data failed:', error)
     return false
   }
 }
 
-// 清空所有数据
+// Clear all data
 export const clearAllData = async () => {
   try {
     await localforage.clear()
     return true
   } catch (error) {
-    console.error('清空数据失败:', error)
+    console.error('Clear data failed:', error)
     return false
   }
 }
 
-// 获取数据统计信息
+// Get data statistics
 export const getDataStats = async () => {
   try {
     const habits = await getHabits()
@@ -348,7 +348,7 @@ export const getDataStats = async () => {
       activeHabits: habits.length
     }
   } catch (error) {
-    console.error('获取数据统计失败:', error)
+    console.error('Get data statistics failed:', error)
     return {
       totalHabits: 0,
       totalCompletions: 0,
@@ -357,77 +357,77 @@ export const getDataStats = async () => {
   }
 }
 
-// 获取提醒设置
+// Get reminder settings
 export const getReminderSettings = async () => {
   try {
     const settings = await localforage.getItem('reminderSettings')
     return settings || sampleReminderSettings
   } catch (error) {
-    console.error('[DEBUG] 获取提醒设置失败:', error)
+    console.error('[DEBUG] Get reminder settings failed:', error)
     return sampleReminderSettings
   }
 }
 
-// 更新提醒设置
+// Update reminder settings
 export const updateReminderSettings = async (settings) => {
   try {
     const currentSettings = await getReminderSettings()
     const newSettings = { ...currentSettings, ...settings }
     await localforage.setItem('reminderSettings', newSettings)
-    console.log('[DEBUG] 提醒设置已更新:', newSettings)
+    console.log('[DEBUG] Reminder settings updated:', newSettings)
     
-    // 通知提醒调度器设置已更新
+    // Notify reminder scheduler that settings have been updated
     handleReminderSettingsChange()
     
     return newSettings
   } catch (error) {
-    console.error('[DEBUG] 更新提醒设置失败:', error)
+    console.error('[DEBUG] Update reminder settings failed:', error)
     return null
   }
 }
 
-// 为习惯添加提醒时间
+// Add reminder time to habit
 export const addHabitReminder = async (habitId, time) => {
   try {
     const habits = await getHabits()
     const habit = habits.find(h => h.id === habitId)
     
     if (!habit) {
-      console.log('[DEBUG] 未找到要添加提醒的习惯，ID:', habitId)
+      console.log('[DEBUG] Habit not found, ID:', habitId)
       return false
     }
     
-    // 确保reminders字段存在
+    // Ensure reminders field exists
     if (!habit.reminders) {
       habit.reminders = []
     }
     
-    // 避免重复的提醒时间
+    // Avoid duplicate reminder times
     if (!habit.reminders.includes(time)) {
       habit.reminders.push(time)
-      // 按时间排序
+      // Sort by time
       habit.reminders.sort()
       
       await localforage.setItem('habits', habits)
-      console.log('[DEBUG] 为习惯添加提醒时间:', habit.name, '时间:', time)
+      console.log('[DEBUG] Added reminder to habit:', habit.name, 'time:', time)
       return true
     }
     
     return false
   } catch (error) {
-    console.error('[DEBUG] 为习惯添加提醒失败:', error)
+    console.error('[DEBUG] Add habit reminder failed:', error)
     return false
   }
 }
 
-// 从习惯中移除提醒时间
+// Remove reminder time from habit
 export const removeHabitReminder = async (habitId, time) => {
   try {
     const habits = await getHabits()
     const habit = habits.find(h => h.id === habitId)
     
     if (!habit || !habit.reminders) {
-      console.log('[DEBUG] 未找到要移除提醒的习惯或提醒列表，ID:', habitId)
+      console.log('[DEBUG] Habit or reminders not found, ID:', habitId)
       return false
     }
     
@@ -436,36 +436,36 @@ export const removeHabitReminder = async (habitId, time) => {
     
     if (habit.reminders.length !== initialLength) {
       await localforage.setItem('habits', habits)
-      console.log('[DEBUG] 从习惯移除提醒时间:', habit.name, '时间:', time)
+      console.log('[DEBUG] Removed reminder from habit:', habit.name, 'time:', time)
       return true
     }
     
     return false
   } catch (error) {
-    console.error('[DEBUG] 从习惯移除提醒失败:', error)
+    console.error('[DEBUG] Remove habit reminder failed:', error)
     return false
   }
 }
 
-// 获取所有带有提醒的习惯
+// Get all habits with reminders
 export const getHabitsWithReminders = async () => {
   try {
     const habits = await getHabits()
     return habits.filter(habit => habit.reminders && habit.reminders.length > 0)
   } catch (error) {
-    console.error('[DEBUG] 获取带提醒的习惯失败:', error)
+    console.error('[DEBUG] Get habits with reminders failed:', error)
     return []
   }
 }
 
-// 初始化数据库
+// Initialize database
 initDatabase()
 
-// 将清除数据函数暴露到全局，方便调试
+// Expose clear data function to global for debugging
 if (typeof window !== 'undefined') {
   window.clearDoneItData = async () => {
     await clearAllData()
-    console.log('[DEBUG] 数据已清除，请刷新页面')
+    console.log('[DEBUG] Data cleared, please refresh the page')
     location.reload()
   }
 }

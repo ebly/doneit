@@ -24,7 +24,7 @@ const props = defineProps({
 const chartDom = ref(null)
 const chartInstance = ref(null)
 
-// 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
+// Convert date to local date string (YYYY-MM-DD format)
 const formatDateToLocal = (date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -32,14 +32,18 @@ const formatDateToLocal = (date) => {
   return `${year}-${month}-${day}`
 }
 
-// 生成热力图数据
+// Generate heatmap data
 const heatmapData = computed(() => {
   const days = parseInt(props.dateRange) || 365
   const today = new Date()
   const data = []
   const habits = props.isAllHabits ? props.habits : (props.habit ? [props.habit] : [])
   
-  // 生成过去 N 天的数据
+  console.log('[DEBUG] Heatmap: Generating data for', days, 'days')
+  console.log('[DEBUG] Heatmap: Habits count:', habits.length)
+  console.log('[DEBUG] Heatmap: isAllHabits:', props.isAllHabits)
+  
+  // Generate data for the past N days
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
@@ -47,7 +51,7 @@ const heatmapData = computed(() => {
     
     let completedCount = 0
     
-    // 计算当天的完成数量
+    // Calculate completion count for the day
     habits.forEach(habit => {
       if (!habit.completedDates) return
       if (habit.completedDates.some(d => d.startsWith(dateStr))) {
@@ -55,8 +59,19 @@ const heatmapData = computed(() => {
       }
     })
     
-    // 计算完成度（0-1）
+    // Calculate completion rate (0-1)
     const completionRate = habits.length > 0 ? completedCount / habits.length : 0
+    
+    // Log today's data
+    if (i === 0) {
+      console.log('[DEBUG] Heatmap: Today is', dateStr)
+      console.log('[DEBUG] Heatmap: Today completedCount:', completedCount)
+      console.log('[DEBUG] Heatmap: Today completionRate:', completionRate)
+      console.log('[DEBUG] Heatmap: Today habits:', habits.map(h => ({
+        name: h.name,
+        completedDates: h.completedDates?.filter(d => d.startsWith(dateStr))
+      })))
+    }
     
     data.push([
       dateStr,
@@ -66,10 +81,13 @@ const heatmapData = computed(() => {
     ])
   }
   
+  console.log('[DEBUG] Heatmap: Generated', data.length, 'data points')
+  console.log('[DEBUG] Heatmap: Last 7 days:', data.slice(-7))
+  
   return data
 })
 
-// 格式化日期显示
+// Format date display
 const formatDate = (dateStr) => {
   const date = new Date(dateStr)
   const monthNames = [
@@ -89,7 +107,7 @@ const initChart = () => {
   
   chartInstance.value = echarts.init(chartDom.value)
   
-  // 生成过去 365 天的数据
+  // Generate data for the past 365 days
   const days = 365
   const today = new Date()
   const startDate = new Date(today)
@@ -98,7 +116,7 @@ const initChart = () => {
   const startYear = startDate.getFullYear()
   const endYear = today.getFullYear()
   
-  // 生成热力图数据
+  // Generate heatmap data
   const heatmapData = []
   const habits = props.isAllHabits ? props.habits : (props.habit ? [props.habit] : [])
   const totalHabits = props.isAllHabits ? props.habits.length : 1
@@ -116,44 +134,28 @@ const initChart = () => {
       }
     })
     
-    // 计算完成率（0-1 之间）
+    // Calculate completion rate (0-1)
     const completionRate = totalHabits > 0 ? completedCount / totalHabits : 0
     heatmapData.push([dateStr, completionRate])
   }
   
   const option = {
-    tooltip: {
-      position: 'top',
-      formatter: function(params) {
-        const dateStr = params.value[0]
-        const date = new Date(dateStr)
-        const monthNames = [
-          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ]
-        const dateDisplay = `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
-        const rate = params.value[1]
-        const percentage = Math.round(rate * 100)
-        
-        if (props.isAllHabits) {
-          return `${date_display}<br/>${percentage}% habits completed`
-        } else {
-          return `${date_display}<br/>${rate > 0 ? '✓ Completed' : '✗ Not completed'}`
-        }
-      }
-    },
     visualMap: {
       show: false,
       min: 0,
       max: 1,
+      calculable: false,
       inRange: {
         color: [
-          '#ebedf0',  // 0% - 灰色
-          '#98FB98',  // 30% - 浅绿色
-          '#3CB371',  // 50% - 中等绿色
-          '#2E8B57',  // 70% - 深绿色
-          '#27AE60'   // 100% - 完全不透明绿色
+          '#ebedf0',  // 0% - gray
+          '#98FB98',  // 30% - light green
+          '#3CB371',  // 50% - medium green
+          '#2E8B57',  // 70% - dark green
+          '#27AE60'   // 100% - full opacity green
         ]
+      },
+      outOfRange: {
+        color: ['#ebedf0']
       }
     },
     calendar: {
@@ -162,7 +164,7 @@ const initChart = () => {
       right: '4%',
       bottom: 10,
       cellSize: [8, 8],
-      range: [startDate.toISOString().split('T')[0], today.toISOString().split('T')[0]],
+      range: [formatDateToLocal(startDate), formatDateToLocal(today)],
       itemStyle: {
         borderWidth: 4,
         borderColor: '#fff',
@@ -206,7 +208,15 @@ const initChart = () => {
         show: false
       },
       itemStyle: {
-        borderRadius: 4
+        borderRadius: 4,
+        color: function(params) {
+          // If no data or completion rate is 0, return gray
+          if (!params.value || params.value[1] === 0) {
+            return '#ebedf0'
+          }
+          // Otherwise let visualMap decide color based on completion rate
+          return null
+        }
       },
       emphasis: {
         itemStyle: {
@@ -220,12 +230,12 @@ const initChart = () => {
   chartInstance.value.setOption(option)
 }
 
-// 监听数据变化
+// Listen for data changes
 watch([() => props.habit, () => props.habits, () => props.dateRange, () => props.isAllHabits], () => {
   initChart()
 }, { deep: true })
 
-// 监听窗口大小变化
+// Listen for window resize
 const handleResize = () => {
   if (chartInstance.value) {
     chartInstance.value.resize()

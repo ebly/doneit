@@ -108,7 +108,7 @@ export const createHabitReminder = (habit, time) => {
   }
 }
 
-// 解析时间字符串为小时和分钟
+// Parse time string to Hour and Minute
 export const parseTime = (timeStr) => {
   const [hours, minutes] = timeStr.split(':').map(Number)
   return { hours, minutes }

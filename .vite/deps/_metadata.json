@@ -1,0 +1,36 @@
+{
+  "hash": "e57de00f",
+  "configHash": "de869c57",
+  "lockfileHash": "89452e4d",
+  "browserHash": "eb37b307",
+  "optimized": {
+    "element-plus": {
+      "src": "../../node_modules/element-plus/es/index.mjs",
+      "file": "element-plus.js",
+      "fileHash": "f833c453",
+      "needsInterop": false
+    },
+    "localforage": {
+      "src": "../../node_modules/localforage/dist/localforage.js",
+      "file": "localforage.js",
+      "fileHash": "22da18c1",
+      "needsInterop": true
+    },
+    "vue": {
+      "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
+      "file": "vue.js",
+      "fileHash": "d0708fa8",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-CRPLlQ3x": {
+      "file": "chunk-CRPLlQ3x.js",
+      "isDynamicEntry": false
+    },
+    "vue.runtime.esm-bundler-lRCzm0bN": {
+      "file": "vue.runtime.esm-bundler-lRCzm0bN.js",
+      "isDynamicEntry": false
+    }
+  }
+}

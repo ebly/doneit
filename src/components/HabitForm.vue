@@ -44,7 +44,7 @@ const iconOptions = [
   { value: '📝', label: '默认' }
 ]
 
-// 生成小时快捷选项
+// Generate hour shortcuts
 const hourShortcuts = [
   { text: '00', value: '00' },
   { text: '06', value: '06' },
@@ -53,7 +53,7 @@ const hourShortcuts = [
   { text: '23', value: '23' }
 ]
 
-// 从时间字符串解析小时和分钟
+// Parse hour and minute from time string
 const parseTime = (timeStr) => {
   if (!timeStr) {
     reminderHour.value = ''
@@ -65,7 +65,7 @@ const parseTime = (timeStr) => {
   reminderMinute.value = minute
 }
 
-// 组合小时和分钟为时间字符串
+// Combine hour and minute into time string
 const combineTime = () => {
   if (!reminderHour.value && !reminderMinute.value) {
     return ''
@@ -105,9 +105,8 @@ const submitForm = () => {
     return
   }
 
-  // 验证 Reminders 不能为空
-  if ((!reminderHour.value || !reminderMinute.value) || 
-      (reminderHour.value === '00' && reminderMinute.value === '00')) {
+  // Validate Reminders cannot be empty (need to select both Hour and Min)
+  if (!reminderHour.value || !reminderMinute.value) {
     ElMessage({
       message: 'Please select a reminder time',
       type: 'warning',
@@ -126,9 +125,10 @@ const submitForm = () => {
 
   console.log('[DEBUG] selectedDays.value:', selectedDays.value)
 
-  // 组合小时和分钟为完整时间
+  // Combine hour and minute into full time
   const combinedTime = combineTime()
-  const validReminders = combinedTime && combinedTime !== '00:00' ? [combinedTime] : []
+  // 00:00 是有效时间（深夜 12 点）
+  const validReminders = combinedTime ? [combinedTime] : []
 
   const habitData = {
     name: habitName.value.trim(),
@@ -198,7 +198,7 @@ const handleIconSelect = (icon) => {
       </el-form-item>
 
       <el-form-item label="Description">
-        <el-input v-model="description" placeholder="e.g., 每天早上 6 点起床锻炼 30 分钟" type="textarea" rows="3" />
+        <el-input v-model="description" placeholder="e.g., Exercise for 30 minutes every morning at 6 AM" type="textarea" rows="3" />
       </el-form-item>
 
       <el-form-item label="Days/Week" required>
@@ -215,11 +215,11 @@ const handleIconSelect = (icon) => {
 
       <el-form-item label="Reminders" required>
         <div class="reminder-time-inputs">
-          <el-select v-model="reminderHour" placeholder="小时" style="width: 100px;" clearable filterable>
+          <el-select v-model="reminderHour" placeholder="Hour" style="width: 100px;" clearable filterable>
             <el-option v-for="h in 24" :key="h - 1" :label="String(h - 1).padStart(2, '0')" :value="String(h - 1).padStart(2, '0')" />
           </el-select>
           <span class="time-separator">:</span>
-          <el-select v-model="reminderMinute" placeholder="分钟" style="width: 100px;" clearable filterable>
+          <el-select v-model="reminderMinute" placeholder="Min" style="width: 100px;" clearable filterable>
             <el-option v-for="m in 60" :key="m - 1" :label="String(m - 1).padStart(2, '0')" :value="String(m - 1).padStart(2, '0')" />
           </el-select>
         </div>

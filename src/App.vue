@@ -129,9 +129,11 @@ const applyTheme = () => {
 }
 
 // 从本地存储加载习惯
+// Load habits
 const loadHabits = async () => {
   const loadedHabits = await getHabits()
   habits.value = loadedHabits
+  console.log('[DEBUG] App: Loaded habits:', habits.value)
 }
 
 const showAddForm = ref(false)
@@ -200,7 +202,11 @@ const toggleHabit = async (id) => {
 
       <main class="main-content">
         <!-- Dashboard 视图 -->
-        <Dashboard v-if="currentView === 'dashboard'" :habits="habits" @update:habits="newHabits => habits = newHabits" />
+        <Dashboard v-if="currentView === 'dashboard'" :habits="habits" @update:habits="newHabits => {
+          console.log('[DEBUG] App: Received updated habits from Dashboard:', newHabits)
+          habits = newHabits
+          console.log('[DEBUG] App: Habits updated, new value:', habits)
+        }" />
 
         <!-- My Habits 视图 -->
         <template v-else-if="currentView === 'myhabits'">

@@ -75,7 +75,7 @@ const isToday = (date) => {
          date.getDate() === today.getDate()
 }
 
-// 检查当前时间是否在提醒时间的 ±1 小时范围内
+// Check if current time is within ±1 Hour of reminder time
 const isWithinReminderWindow = (habit) => {
   if (!habit.reminders || habit.reminders.length === 0) {
     return { valid: true } // 没有设置提醒时间，允许勾选
@@ -92,30 +92,35 @@ const isWithinReminderWindow = (habit) => {
     const [reminderHour, reminderMinute] = reminderTime.split(':').map(Number)
     const reminderTimeInMinutes = reminderHour * 60 + reminderMinute
 
-    // 计算时间差（分钟）
+    // Calculate time difference (minutes)
     let timeDiff = currentTimeInMinutes - reminderTimeInMinutes
 
     // 处理跨天情况
     if (timeDiff > 720) {
-      timeDiff -= 1440 // 减去一天的分钟数
+      timeDiff -= 1440 // Subtract one day's minutes
     } else if (timeDiff < -720) {
-      timeDiff += 1440 // 加上一天的分钟数
+      timeDiff += 1440 // Add one day's minutes
     }
 
-    // 检查是否在 ±1 小时（60 分钟）范围内
+    // Check if within ±1 Hour (60 minutes) range
     if (Math.abs(timeDiff) <= 60) {
       return { valid: true }
     }
   }
 
-  // 不在任何提醒时间的 ±1 小时范围内
+  // Not within ±1 Hour range of any reminder time
   const earliestReminder = habit.reminders[0]
-  const [hour] = earliestReminder.split(':').map(Number)
+  const [earliestHour, earliestMinute] = earliestReminder.split(':').map(Number)
+  const earliestReminderInMinutes = earliestHour * 60 + earliestMinute
   
-  if (currentTimeInMinutes < hour * 60 - 60) {
-    return { valid: false, message: `Too early. Reminder is at ${earliestReminder}, please check in after ${hour - 1}:00` }
+  // Format hour display, handle 00:00 case
+  const prevHour = earliestHour === 0 ? 23 : earliestHour - 1
+  const nextHour = earliestHour === 23 ? 0 : earliestHour + 1
+  
+  if (currentTimeInMinutes < earliestReminderInMinutes - 60) {
+    return { valid: false, message: `Too early. Reminder is at ${earliestReminder}, please check in after ${String(prevHour).padStart(2, '0')}:00` }
   } else {
-    return { valid: false, message: `Too late. Reminder was at ${earliestReminder}, please check in before ${hour + 1}:00` }
+    return { valid: false, message: `Too late. Reminder was at ${earliestReminder}, please check in before ${String(nextHour).padStart(2, '0')}:00` }
   }
 }
 
@@ -132,7 +137,7 @@ const toggleDay = async (habitId, dayIndex) => {
     return
   }
 
-  // 检查是否在提醒时间的有效范围内
+  // Check if within reminder time valid range
   const timeCheck = isWithinReminderWindow(habit)
   if (!timeCheck.valid) {
     ElMessage({
@@ -143,7 +148,9 @@ const toggleDay = async (habitId, dayIndex) => {
   }
 
   await toggleHabitComplete(habitId, date)
-  emit('update:habits', await getHabits())
+  const updatedHabits = await getHabits()
+  console.log('[DEBUG] Dashboard: Emitting updated habits:', updatedHabits)
+  emit('update:habits', updatedHabits)
 }
 
 const getHabitIcon = (habit) => {
@@ -171,7 +178,7 @@ const handleExport = async () => {
   }
 }
 
-// 检查当前时间是否在提醒时间的 ±1 小时范围内
+// Check if current time is within ±1 Hour of reminder time
 const checkReminderWindow = () => {
   // 只在页面第一次打开时检查，使用 sessionStorage 记录
   const hasShownReminder = sessionStorage.getItem('hasShownReminder')
