@@ -6,7 +6,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/doneit/',   // GitHub Pages 路径
+  base: '/',   // 根路径
   plugins: [
     vue(),
     // 自动导入Element Plus组件
