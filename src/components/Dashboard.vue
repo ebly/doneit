@@ -57,6 +57,62 @@ const isHabitCompletedOnDate = (habit, date) => {
   return habit.completedDates.some(d => d.startsWith(dateStr))
 }
 
+// 计算习惯的单周打卡次数（Weekly）
+const calculateWeekly = (habit) => {
+  if (!habit.completedDates || habit.completedDates.length === 0) {
+    return 0
+  }
+
+  // 按日期排序（从近到远）
+  const sortedDates = [...habit.completedDates].sort((a, b) => {
+    return new Date(b) - new Date(a)
+  })
+
+  let weekly = 0
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  // 检查最后一次打卡是否是今天或昨天
+  const lastCheckinDate = new Date(sortedDates[0])
+  const lastCheckinDateOnly = new Date(lastCheckinDate.getFullYear(), lastCheckinDate.getMonth(), lastCheckinDate.getDate())
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+
+  if (lastCheckinDateOnly.getTime() !== todayOnly.getTime() && 
+      lastCheckinDateOnly.getTime() !== yesterdayOnly.getTime()) {
+    // 最后一次打卡不是今天或昨天，Weekly 断了
+    return 0
+  }
+
+  // 计算连续天数
+  weekly = 1
+  let currentDate = lastCheckinDateOnly
+
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prevDate = new Date(sortedDates[i])
+    const prevDateOnly = new Date(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate())
+    
+    // 计算预期日期（当前日期的前一天）
+    const expectedDate = new Date(currentDate)
+    expectedDate.setDate(expectedDate.getDate() - 1)
+
+    if (prevDateOnly.getTime() === expectedDate.getTime()) {
+      // 连续的一天
+      weekly++
+      currentDate = prevDateOnly
+    } else if (prevDateOnly.getTime() === currentDate.getTime()) {
+      // 同一天多次打卡，跳过
+      continue
+    } else {
+      // 间隔超过一天，Weekly 断了
+      break
+    }
+  }
+
+  return weekly
+}
+
 // 检查某一天是否在习惯的 daysPerWeek 中
 const isDayEnabled = (habit, dayIndex) => {
   // 如果没有设置 daysPerWeek 或为空数组，默认允许所有天
@@ -299,17 +355,17 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <!-- Streak Column -->
-        <el-table-column label="Streak" width="120" align="center">
+        <!-- Weekly Column -->
+        <el-table-column label="Weekly" width="100" align="center">
           <template #default="{ row }">
-            <div class="streak-info">
+            <div class="weekly-info">
               <el-tag type="warning">
                 <el-icon>
                   <Star />
-                </el-icon> {{ row.streak || 0 }} days
+                </el-icon> {{ calculateWeekly(row) }} days
               </el-tag>
               <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: `${((row.streak || 0) / 30) * 100}%` }"></div>
+                <div class="progress-fill" :style="{ width: `${Math.min((calculateWeekly(row) / 7) * 100, 100)}%` }"></div>
               </div>
             </div>
           </template>
@@ -340,6 +396,15 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+/* 增加表格行高 */
+:deep(.el-table__row) {
+  height: 70px !important;
+}
+
+:deep(.el-table__row .cell) {
+  padding: 10px 0;
 }
 
 /* 确保表头和表格单元格对齐 */
@@ -401,5 +466,32 @@ onMounted(() => {
 .day-icon.current-day-icon {
   border-color: var(--primary-color);
   background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.weekly-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 80px;
+  height: 4px;
+  background-color: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--warning-color);
+  transition: width 0.3s ease;
+}
+
+:deep(.el-table__expanded-cell) {
+  padding: 0px;
 }
 </style>

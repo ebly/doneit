@@ -155,7 +155,7 @@ const nextMonth = () => {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 10px;
   margin: 0 auto;
 }
 
@@ -172,12 +172,12 @@ const nextMonth = () => {
   aspect-ratio: 1;
   border-radius: 4px;
   background: var(--bg-secondary);
-  padding: 8px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  min-height: 80px;
+  min-height: 35px;
   transition: all 0.2s ease;
 }
 

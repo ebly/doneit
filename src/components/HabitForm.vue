@@ -19,9 +19,9 @@ const emit = defineEmits(['add', 'cancel', 'update:visible'])
 const habitName = ref(props.habit?.name || '')
 const description = ref(props.habit?.description || '')
 const selectedDays = ref(props.habit?.daysPerWeek || ['0', '1', '2', '3', '4', '5', '6'])
-const reminders = ref(props.habit?.reminders && props.habit?.reminders.length > 0 ? [props.habit.reminders[0]] : [])
-const reminderHour = ref('')
-const reminderMinute = ref('')
+const reminders = ref(props.habit?.reminders && props.habit?.reminders.length > 0 ? [props.habit.reminders[0]] : ['00:00'])
+const reminderHour = ref('00')
+const reminderMinute = ref('00')
 const habitIcon = ref(props.habit?.icon || '📝')
 
 // 常用习惯图标选项
@@ -89,8 +89,8 @@ watch(() => props.habit, (newHabit) => {
     habitName.value = ''
     description.value = ''
     selectedDays.value = ['0', '1', '2', '3', '4', '5', '6']
-    reminders.value = []
-    parseTime(null)
+    reminders.value = ['00:00']
+    parseTime('00:00')
     habitIcon.value = '📝'
   }
 }, { immediate: true })
@@ -143,11 +143,29 @@ const submitForm = () => {
 
   emit('add', habitData)
   emit('update:visible', false)
+  
+  // 清空所有字段，恢复初始状态
+  habitName.value = ''
+  description.value = ''
+  selectedDays.value = ['0', '1', '2', '3', '4', '5', '6']
+  reminders.value = ['00:00']
+  reminderHour.value = '00'
+  reminderMinute.value = '00'
+  habitIcon.value = '📝'
 }
 
 const handleCancel = () => {
   emit('cancel')
   emit('update:visible', false)
+  
+  // 清空所有字段，恢复初始状态
+  habitName.value = ''
+  description.value = ''
+  selectedDays.value = ['0', '1', '2', '3', '4', '5', '6']
+  reminders.value = ['00:00']
+  reminderHour.value = '00'
+  reminderMinute.value = '00'
+  habitIcon.value = '📝'
 }
 
 // 切换星期几的选择状态
@@ -198,7 +216,7 @@ const handleIconSelect = (icon) => {
       </el-form-item>
 
       <el-form-item label="Description">
-        <el-input v-model="description" placeholder="e.g., Exercise for 30 minutes every morning at 6 AM" type="textarea" rows="3" />
+        <el-input v-model="description" placeholder="e.g., Exercise for 30 minutes every morning at 6 AM" type="textarea" :rows="3" />
       </el-form-item>
 
       <el-form-item label="Days/Week" required>

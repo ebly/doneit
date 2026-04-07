@@ -116,11 +116,6 @@ body.dark-mode .main-content {
   line-height: normal !important;
 }
 
-/* 确保表格单元格本身也居中 */
-.el-table .el-table__cell {
-  text-align: center;
-}
-
 /* 移动设备布局优化 */
 @media (max-width: 768px) {
   .app-container {

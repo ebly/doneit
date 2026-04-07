@@ -13,3 +13,71 @@
   background-color: var(--primary-dark) !important;
   border-color: var(--primary-dark) !important;
 }
+
+/* 删除确认对话框样式 */
+.el-message-box--warning {
+  border-radius: 4px;
+}
+
+.el-message-box__header {
+  padding: 10px;
+}
+
+.el-message-box__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.el-message-box__content {
+  padding: 10px 24px 20px;
+}
+
+.el-message-box__message {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 按钮容器 - 使用 flex 布局分开两个按钮 */
+.el-message-box__btns {
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* 取消按钮样式 */
+.el-message-box__btns .el-button--default {
+  flex: 1;
+  max-width: 120px;
+  order: 1;
+}
+
+/* 删除按钮样式 */
+.el-message-box__btns .el-button--primary {
+  flex: 1;
+  max-width: 120px;
+  order: 2;
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+}
+
+.el-message-box__btns .el-button--primary:hover {
+  background-color: #f78989;
+  border-color: #f78989;
+}
+
+/* 暗色模式适配 */
+.dark-mode .el-message-box {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+.dark-mode .el-message-box__title {
+  color: #fff;
+}
+
+.dark-mode .el-message-box__message {
+  color: #ccc;
+}

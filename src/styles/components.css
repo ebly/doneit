@@ -101,9 +101,7 @@
 /* ----- 习惯详情 ----- */
 .habit-detail {
   padding: 16px;
-  background-color: rgba(0, 0, 0, 0.02);
   border-radius: 8px;
-  margin: 8px 0;
 }
 
 .habit-detail h3 {
