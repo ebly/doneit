@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import * as echarts from 'echarts'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { useChart } from '../../composables/useChart'
 
 const props = defineProps({
   habit: {
@@ -10,7 +10,7 @@ const props = defineProps({
 })
 
 const chartDom = ref(null)
-const chartInstance = ref(null)
+const { initChart: initEChart } = useChart(chartDom)
 
 // 将日期转换为本地日期字符串（YYYY-MM-DD 格式）
 const formatDateToLocal = (date) => {
@@ -139,16 +139,8 @@ const chartData = computed(() => {
 const initChart = () => {
   if (!chartDom.value) return
   
-  const existingChart = echarts.getInstanceByDom(chartDom.value)
-  if (existingChart) {
-    existingChart.dispose()
-  }
-  
-  chartInstance.value = echarts.init(chartDom.value)
-  
-  // 创建 Y 轴标签的颜色数组
   const yAxisColors = ['Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'].map((dayLabel, index) => {
-    const dayIndex = 6 - index // 转换为 0-6（Sun=0, Sat=6）
+    const dayIndex = 6 - index
     const isDayEnabled = !props.habit.daysPerWeek || 
                          props.habit.daysPerWeek.length === 0 || 
                          props.habit.daysPerWeek.includes(dayIndex.toString())
@@ -193,34 +185,16 @@ const initChart = () => {
     series: chartData.value.seriesData
   }
   
-  chartInstance.value.setOption(option)
+  initEChart(option)
 }
 
-// 监听窗口大小变化
-const handleResize = () => {
-  if (chartInstance.value) {
-    chartInstance.value.resize()
-  }
-}
-
-// 监听数据变化
 watch(() => props.habit, () => {
   initChart()
 }, { deep: true })
 
-// 生命周期
-import { onMounted, onBeforeUnmount } from 'vue'
-
-onMounted(() => {
+onMounted(async () => {
+  await nextTick()
   initChart()
-  window.addEventListener('resize', handleResize)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize)
-  if (chartInstance.value) {
-    chartInstance.value.dispose()
-  }
 })
 </script>
 

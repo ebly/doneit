@@ -13,8 +13,8 @@ export const useTheme = () => {
     if (savedTheme) {
       isDarkMode.value = savedTheme === 'dark'
     } else {
-      // 检查系统偏好
-      isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+      // 默认使用浅色模式
+      isDarkMode.value = false
     }
     applyTheme()
   }

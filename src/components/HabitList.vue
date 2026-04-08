@@ -112,14 +112,6 @@ const getDayName = (dayIndex) => {
 </template>
 
 <style scoped>
-.days-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  justify-content: center;
-  align-items: center;
-}
-
 .no-days {
   color: var(--text-secondary);
   font-style: italic;

@@ -22,7 +22,11 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
     const startDate = new Date(firstDayOfCurrentMonth)
     startDate.setMonth(startDate.getMonth() - 4) // 4 个月前的 1 号
     
-    console.log(`[INFO] 数据生成范围：${startDate.toISOString().split('T')[0]} 到 ${today.toISOString().split('T')[0]}`)
+    // 只生成到昨天的数据（不包含今天和未来）
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    
+    console.log(`[INFO] 数据生成范围：${startDate.toISOString().split('T')[0]} 到 ${yesterday.toISOString().split('T')[0]}`)
     
     // 为每个习惯生成随机的完成日期
     for (const habit of habits) {
@@ -30,8 +34,8 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
       
       console.log(`[INFO] 处理习惯：${habit.name}, daysPerWeek: ${habit.daysPerWeek?.join(',')}`)
       
-      // 遍历从 startDate 到 today 的所有日期
-      for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
+      // 遍历从 startDate 到 yesterday 的所有日期
+      for (let d = new Date(startDate); d <= yesterday; d.setDate(d.getDate() + 1)) {
         // 使用本地时间格式化，避免时区问题
         const year = d.getFullYear()
         const month = String(d.getMonth() + 1).padStart(2, '0')

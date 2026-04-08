@@ -57,56 +57,63 @@ const isHabitCompletedOnDate = (habit, date) => {
   return habit.completedDates.some(d => d.startsWith(dateStr))
 }
 
+// 计算本周可打卡的天数（根据 daysPerWeek 设置）
+const calculateWeeklyTotal = (habit) => {
+  if (!habit.daysPerWeek || habit.daysPerWeek.length === 0) {
+    return 7 // 如果没有设置 daysPerWeek，默认可打卡 7 天
+  }
+
+  // 获取本周日期范围（从周日开始）
+  const today = new Date()
+  const currentDay = today.getDay()
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - currentDay)
+  
+  let total = 0
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(weekStart)
+    date.setDate(weekStart.getDate() + i)
+    const dayIndex = date.getDay().toString()
+    
+    if (habit.daysPerWeek.includes(dayIndex)) {
+      total++
+    }
+  }
+
+  return total
+}
+
 // 计算习惯的单周打卡次数（Weekly）
 const calculateWeekly = (habit) => {
   if (!habit.completedDates || habit.completedDates.length === 0) {
     return 0
   }
 
-  // 按日期排序（从近到远）
-  const sortedDates = [...habit.completedDates].sort((a, b) => {
-    return new Date(b) - new Date(a)
-  })
-
-  let weekly = 0
+  // 获取本周日期范围（从周日开始）
   const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+  const currentDay = today.getDay()
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - currentDay)
+  
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6) // 本周周日
 
-  // 检查最后一次打卡是否是今天或昨天
-  const lastCheckinDate = new Date(sortedDates[0])
-  const lastCheckinDateOnly = new Date(lastCheckinDate.getFullYear(), lastCheckinDate.getMonth(), lastCheckinDate.getDate())
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+  // 统计本周内的打卡天数
+  let weekly = 0
+  const checkedDates = new Set()
 
-  if (lastCheckinDateOnly.getTime() !== todayOnly.getTime() && 
-      lastCheckinDateOnly.getTime() !== yesterdayOnly.getTime()) {
-    // 最后一次打卡不是今天或昨天，Weekly 断了
-    return 0
-  }
-
-  // 计算连续天数
-  weekly = 1
-  let currentDate = lastCheckinDateOnly
-
-  for (let i = 1; i < sortedDates.length; i++) {
-    const prevDate = new Date(sortedDates[i])
-    const prevDateOnly = new Date(prevDate.getFullYear(), prevDate.getMonth(), prevDate.getDate())
+  for (const dateStr of habit.completedDates) {
+    const checkinDate = new Date(dateStr)
+    const checkinDateOnly = new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate())
     
-    // 计算预期日期（当前日期的前一天）
-    const expectedDate = new Date(currentDate)
-    expectedDate.setDate(expectedDate.getDate() - 1)
-
-    if (prevDateOnly.getTime() === expectedDate.getTime()) {
-      // 连续的一天
-      weekly++
-      currentDate = prevDateOnly
-    } else if (prevDateOnly.getTime() === currentDate.getTime()) {
-      // 同一天多次打卡，跳过
-      continue
-    } else {
-      // 间隔超过一天，Weekly 断了
-      break
+    // 检查是否在本周范围内
+    if (checkinDateOnly >= weekStart && checkinDateOnly <= weekEnd) {
+      // 使用 Set 去重，同一天只计算一次
+      const dateKey = checkinDateOnly.toISOString().split('T')[0]
+      if (!checkedDates.has(dateKey)) {
+        checkedDates.add(dateKey)
+        weekly++
+      }
     }
   }
 
@@ -365,7 +372,7 @@ onMounted(() => {
                 </el-icon> {{ calculateWeekly(row) }} days
               </el-tag>
               <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: `${Math.min((calculateWeekly(row) / 7) * 100, 100)}%` }"></div>
+                <div class="progress-fill" :style="{ width: `${Math.min((calculateWeekly(row) / calculateWeeklyTotal(row)) * 100, 100)}%` }"></div>
               </div>
             </div>
           </template>
@@ -374,16 +381,13 @@ onMounted(() => {
         <!-- Expandable Row Column -->
         <el-table-column type="expand">
           <template #default="{ row }">
-            <div class="habit-detail">
-              <h3>习惯详情</h3>
-              <div class="detail-item">
-                <span class="detail-label">描述：</span>
-                <span class="detail-value">{{ row.description || '暂无描述' }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">创建时间：</span>
-                <span class="detail-value">{{ new Date(row.createdAt).toLocaleString() }}</span>
-              </div>
+            <div class="detail-item">
+              <span class="detail-label">Description:</span>
+              <span class="detail-value">{{ row.description || 'No description' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Created At:</span>
+              <span class="detail-value">{{ new Date(row.createdAt).toLocaleString() }}</span>
             </div>
           </template>
         </el-table-column>
@@ -392,6 +396,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+:deep(.el-table__expanded-cell) {
+  padding: 10px;
+}
 .dashboard-header {
   display: flex;
   justify-content: flex-end;
@@ -492,6 +499,9 @@ onMounted(() => {
 }
 
 :deep(.el-table__expanded-cell) {
-  padding: 0px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 </style>

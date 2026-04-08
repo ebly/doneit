@@ -213,40 +213,4 @@ const nextMonth = () => {
   overflow-y: auto;
   width: 100%;
 }
-
-.completion-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  background: var(--success-color);
-  color: white;
-  font-size: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  max-width: 100%;
-}
-
-.completion-tag:hover {
-  transform: scale(1.05);
-  filter: brightness(1.1);
-}
-
-.completion-icon {
-  font-size: 12px;
-  line-height: 1;
-}
-
-.completion-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 80px;
-}
-
-.calendar-cell.today .completion-tag {
-  background: white;
-  color: var(--success-color);
-}
 </style>

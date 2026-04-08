@@ -9,8 +9,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import * as echarts from 'echarts'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { useChart } from '../../composables/useChart'
 
 const props = defineProps({
   habit: {
@@ -19,8 +19,8 @@ const props = defineProps({
   }
 })
 
-const chartInstance = ref(null)
 const chartDom = ref(null)
+const { initChart } = useChart(chartDom)
 
 const chartData = computed(() => {
   if (!props.habit || !props.habit.completedDates) {
@@ -59,7 +59,6 @@ const chartData = computed(() => {
     let completedDays = 0
 
     props.habit.completedDates.forEach(dateStr => {
-      // 使用本地时间解析日期，避免时区问题
       const [y, m, d] = dateStr.split('-').map(Number)
       const completedDate = new Date(y, m - 1, d)
       if (completedDate.getFullYear() === year && completedDate.getMonth() === month) {
@@ -73,115 +72,74 @@ const chartData = computed(() => {
   return { categories, completionRateData }
 })
 
-const initChart = () => {
-  if (!chartDom.value) return
-  
-  const existingChart = echarts.getInstanceByDom(chartDom.value)
-  if (existingChart) {
-    existingChart.dispose()
-  }
-  
-  chartInstance.value = echarts.init(chartDom.value)
-  
-  const option = {
-    tooltip: {
-      trigger: 'item',
-      formatter: function(params) {
-        const percentage = (params.value * 100).toFixed(1)
-        return params.name + ': ' + percentage + '%'
+const option = computed(() => ({
+  tooltip: {
+    trigger: 'item',
+    formatter: function(params) {
+      const percentage = (params.value * 100).toFixed(1)
+      return params.name + ': ' + percentage + '%'
+    }
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    top: '5%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    data: chartData.value.categories
+  },
+  yAxis: {
+    type: 'value',
+    min: 0,
+    max: 1,
+    axisLine: {
+      show: true,
+      lineStyle: {
+        color: '#e0e0e0'
       }
     },
-    grid: {
-      left: '3%',
-      right: '4%',
-      top: '5%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: chartData.value.categories
-    },
-    yAxis: {
-      type: 'value',
-      min: 0,
-      max: 1,
-      axisLine: {
-        show: true,
-        lineStyle: {
-          color: '#e0e0e0'
-        }
+    splitLine: {
+      show: true,
+      lineStyle: {
+        color: '#f0f0f0'
+      }
+    }
+  },
+  series: [
+    {
+      name: 'Complete Rate',
+      type: 'line',
+      data: chartData.value.completionRateData,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 6,
+      areaStyle: {
+        color: 'rgba(64, 158, 255, 0.3)'
       },
-      splitLine: {
-        show: true,
-        lineStyle: {
-          color: '#f0f0f0'
-        }
-      }
-    },
-    series: [
-      {
-        name: 'Complete Rate',
-        type: 'line',
-        data: chartData.value.completionRateData,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        areaStyle: {
-          color: 'rgba(64, 158, 255, 0.3)'
-        },
+      itemStyle: {
+        color: '#409EFF'
+      },
+      emphasis: {
+        focus: 'series',
         itemStyle: {
-          color: '#409EFF'
-        },
-        emphasis: {
-          focus: 'series',
-          itemStyle: {
-            symbolSize: 8
-          }
+          symbolSize: 8
         }
       }
-    ]
-  }
-  
-  chartInstance.value.setOption(option)
-  
-  window.addEventListener('resize', () => {
-    chartInstance.value.resize()
-  })
-}
-
-const updateChart = () => {
-  if (chartInstance.value) {
-    chartInstance.value.setOption({
-      xAxis: {
-        data: chartData.value.categories
-      },
-      series: [
-        {
-          data: chartData.value.completionRateData
-        }
-      ]
-    })
-  }
-}
+    }
+  ]
+}))
 
 watch(() => props.habit, () => {
-  if (chartInstance.value) {
-    initChart()
-  }
+  initChart(option.value)
 }, { deep: true })
 
-onMounted(() => {
-  setTimeout(() => {
-    initChart()
-  }, 100)
-})
-
-onUnmounted(() => {
-  if (chartInstance.value) {
-    chartInstance.value.dispose()
-  }
+onMounted(async () => {
+  await nextTick()
+  initChart(option.value)
 })
 </script>
 

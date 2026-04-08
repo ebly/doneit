@@ -356,7 +356,6 @@ body.dark-mode .main-content {
 }
 
 .completion-tag:hover {
-  transform: scale(1.05);
   filter: brightness(1.1);
 }
 
@@ -370,11 +369,6 @@ body.dark-mode .main-content {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 80px;
-}
-
-.calendar-cell.today .completion-tag {
-  background: white;
-  color: var(--success-color);
 }
 
 .stats-content {
