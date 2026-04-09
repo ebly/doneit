@@ -29,7 +29,12 @@ const handleClose = () => {
 }
 
 const saveUsername = () => {
-  setUsername(tempUsername.value.trim())
+  const trimmed = tempUsername.value.trim()
+  if (trimmed.length > 10) {
+    alert('Username cannot exceed 10 characters')
+    return
+  }
+  setUsername(trimmed)
   emit('update:visible', false)
 }
 
@@ -63,9 +68,9 @@ const handleFileChange = (event) => {
     class="settings-dialog"
     style="position: fixed; top: 70px; right: 20px; margin: 0;"
   >
-    <div style="text-align: center; padding: 20px 0;">
+    <div style="text-align: center;">
       <el-avatar 
-        :size="80" 
+        :size="60" 
         :icon="!avatar ? UserFilled : undefined"
         :src="avatar"
         style="background-color: white; color: var(--primary-color); margin-bottom: 12px; cursor: pointer;"
@@ -83,13 +88,14 @@ const handleFileChange = (event) => {
     </div>
     <el-divider />
     <div style="margin-bottom: 16px;">
-      <p style="font-weight: 600; margin-bottom: 8px;">Edit Username</p>
-      <el-input v-model="tempUsername" placeholder="Enter your name" @keyup.enter="saveUsername" />
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <p style="font-weight: 600; margin: 0; white-space: nowrap;">Username</p>
+        <el-input v-model="tempUsername" placeholder="Enter your name" maxlength="10" @keyup.enter="saveUsername" style="flex: 1;" />
+      </div>
     </div>
     <template #footer>
       <div style="width: 100%; text-align: center;">
         <el-button type="primary" @click="saveUsername">Save</el-button>
-        <div style="color: gray; font-size: 12px; margin-top: 8px;">v1.0.2</div>
       </div>
     </template>
   </el-dialog>
@@ -98,5 +104,6 @@ const handleFileChange = (event) => {
 <style scoped>
 .settings-dialog :deep(.el-dialog__footer) {
   padding-top: 0;
+  border-top: none;
 }
 </style>

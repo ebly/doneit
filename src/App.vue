@@ -68,11 +68,11 @@ onMounted(async () => {
 
 <style scoped>
 .app-container {
-  background-color: #f8f8fc;
+  background-color: var(--bg-primary);
   min-height: 100vh;
 }
 
 .dark-mode .app-container {
-  background-color: #1a1a1a;
+  background-color: var(--bg-primary);
 }
 </style>

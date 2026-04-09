@@ -32,14 +32,10 @@ export const loadMockDataScript = (loadHabits) => {
         })
         return habits
       } catch (error) {
-        console.error('[ERROR] 获取 habits 失败:', error)
+        console.error('获取 habits 失败:', error)
       }
     }
-    
-    console.log('[INFO] 模拟数据生成脚本已加载')
-    console.log('[INFO] 使用方法：在浏览器控制台输入 generateMockData() 并回车')
-    console.log('[INFO] 查看数据：在浏览器控制台输入 printHabits() 并回车')
   } catch (error) {
-    console.error('[ERROR] 加载模拟数据脚本失败:', error)
+    console.error('加载模拟数据脚本失败:', error)
   }
 }

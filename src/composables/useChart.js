@@ -5,6 +5,23 @@ export const useChart = (chartDomRef, options = {}) => {
   const chartInstance = ref(null)
   const { autoInit = true, debounceTime = 100 } = options
 
+  const getChartBackgroundColor = () => {
+    if (document.body.classList.contains('dark-mode')) {
+      return '#2b2b2b'
+    }
+    return 'transparent'
+  }
+
+  const refreshChartTheme = () => {
+    if (chartInstance.value) {
+      chartInstance.value.setOption({
+        backgroundColor: getChartBackgroundColor()
+      })
+    }
+  }
+
+  let themeObserver = null
+
   const initChart = (option) => {
     if (!chartDomRef.value) return
 
@@ -14,12 +31,32 @@ export const useChart = (chartDomRef, options = {}) => {
     }
 
     chartInstance.value = echarts.init(chartDomRef.value)
-    chartInstance.value.setOption(option)
+    
+    const mergedOption = {
+      ...option,
+      backgroundColor: getChartBackgroundColor()
+    }
+    
+    chartInstance.value.setOption(mergedOption)
+
+    if (!themeObserver) {
+      themeObserver = new MutationObserver(() => {
+        refreshChartTheme()
+      })
+      themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+      })
+    }
   }
 
   const updateChart = (option) => {
     if (chartInstance.value) {
-      chartInstance.value.setOption(option)
+      const mergedOption = {
+        ...option,
+        backgroundColor: getChartBackgroundColor()
+      }
+      chartInstance.value.setOption(mergedOption)
     }
   }
 
@@ -33,6 +70,10 @@ export const useChart = (chartDomRef, options = {}) => {
     if (chartInstance.value) {
       chartInstance.value.dispose()
       chartInstance.value = null
+    }
+    if (themeObserver) {
+      themeObserver.disconnect()
+      themeObserver = null
     }
   }
 
@@ -59,13 +100,14 @@ export const useChart = (chartDomRef, options = {}) => {
     if (newVal && autoInit) {
       resizeChart()
     }
-  }, { immediate: true })
+  })
 
   return {
     chartInstance,
     initChart,
     updateChart,
     resizeChart,
-    disposeChart
+    disposeChart,
+    refreshChartTheme
   }
 }

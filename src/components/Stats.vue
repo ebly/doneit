@@ -27,25 +27,12 @@ const dateRange = ref('30') // Default Last 30 Days
 
 // Listen for habits changes, but don't auto select, default is 'all'
 watch(() => props.habits, (newHabits, oldHabits) => {
-  console.log('[DEBUG] Stats: Habits prop changed')
-  console.log('[DEBUG] Stats: Old habits count:', oldHabits?.length)
-  console.log('[DEBUG] Stats: New habits count:', newHabits.length)
-  if (newHabits.length > 0) {
-    newHabits.forEach((habit, index) => {
-      console.log(`[DEBUG] Stats: Habit ${index}: ${habit.name}, completed: ${habit.completedDates?.length || 0}`)
-    })
-  }
   // Keep default value 'all'
 }, { immediate: true, deep: true })
 
 // Calculate overall statistics
 const stats = computed(() => {
-  console.log('[DEBUG] Stats: Computing stats...')
-  console.log('[DEBUG] Stats: isAllHabits:', selectedHabitId.value === 'all' || !selectedHabitId.value)
-  console.log('[DEBUG] Stats: dateRange:', dateRange.value)
-  
   if (!props.habits || props.habits.length === 0) {
-    console.log('[DEBUG] Stats: No habits, returning zeros')
     return {
       currentStreak: 0,
       completionRate: 0,
@@ -68,9 +55,6 @@ const stats = computed(() => {
 
   let totalCheckins = 0
   let maxStreak = 0
-
-  console.log('[DEBUG] Stats: Calculating for', isAllHabits ? 'all habits' : 'single habit')
-  console.log('[DEBUG] Stats: Habits count:', habitsToCalculate.length)
   
   if (isAllHabits && props.habits.length > 0) {
     // All Habits mode: count days when all habits are completed
@@ -79,8 +63,6 @@ const stats = computed(() => {
     // Collect all dates
     props.habits.forEach(habit => {
       if (!habit.completedDates) return
-      
-      console.log('[DEBUG] Stats: Habit', habit.name, 'has', habit.completedDates.length, 'completions')
       
       habit.completedDates.forEach(dateStr => {
         const datePart = dateStr.split(' ')[0]
@@ -97,8 +79,6 @@ const stats = computed(() => {
         }
       })
     })
-
-    console.log('[DEBUG] Stats: All dates in range:', Array.from(allDates))
 
     // Check each day if all habits are completed
     let completedDays = []
@@ -396,21 +376,21 @@ watch(dateRange, () => {
 
 /* 覆盖 Element Plus 选框的蓝色 */
 :deep(.el-select__wrapper.is-focused) {
-  box-shadow: 0 0 0 1px #3270ca inset !important;
+  box-shadow: 0 0 0 1px var(--primary-color) inset !important;
 }
 
 :deep(.el-select-dropdown__item.selected) {
-  color: #3270ca !important;
+  color: var(--primary-color) !important;
   font-weight: 600;
-  background-color: #e8f0fe;
+  background-color: var(--bg-tertiary);
 }
 
 :deep(.el-select-dropdown__item:hover) {
-  background-color: #f5f7fa;
+  background-color: var(--bg-tertiary);
 }
 
 :deep(.dark-mode .el-select-dropdown__item.selected) {
-  color: #3270ca !important;
+  color: var(--primary-color) !important;
   background-color: rgba(50, 112, 202, 0.2);
 }
 
@@ -426,14 +406,9 @@ watch(dateRange, () => {
   align-items: center;
   gap: 16px;
   padding: 10px;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.dark-mode .stat-card {
-  background: #2d2d2d;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
@@ -452,22 +427,22 @@ watch(dateRange, () => {
 
 .stat-label {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .dark-mode .stat-label {
-  color: #999;
+  color: var(--text-light);
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .dark-mode .stat-value {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* 图表网格 */
@@ -478,15 +453,10 @@ watch(dateRange, () => {
 }
 
 .chart-card {
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   padding: 10px;
-}
-
-.dark-mode .chart-card {
-  background: #2d2d2d;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .chart-card.wide {
@@ -496,7 +466,7 @@ watch(dateRange, () => {
 .chart-title {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
@@ -516,38 +486,38 @@ watch(dateRange, () => {
   font-size: 12px;
   border: none;
   cursor: pointer;
-  color: #999;
+  color: var(--text-light);
   transition: all 0.2s;
   background: transparent;
 }
 
 .toggle-btn.active {
-  color: #3270ca;
+  color: var(--primary-color);
   font-weight: 600;
 }
 
 .dark-mode .toggle-btn {
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .dark-mode .toggle-btn.active {
   background: transparent;
-  color: #3270ca;
+  color: var(--primary-color);
 }
 
 .dark-mode .chart-title {
-  color: #e0e0e0;
+  color: var(--text-primary);
 }
 
 .no-habit-tip {
   padding: 40px 20px;
   text-align: center;
-  color: #999;
+  color: var(--text-light);
   font-size: 14px;
 }
 
 .dark-mode .no-habit-tip {
-  color: #666;
+  color: var(--text-disabled);
 }
 
 /* 响应式 */

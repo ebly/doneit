@@ -13,7 +13,8 @@ const formatDateToLocal = (date) => {
 localforage.config({
   name: 'DoneIt',
   storeName: 'habits',
-  description: 'User data for DoneIt habit tracking application'
+  description: 'User data for DoneIt habit tracking application',
+  driver: localforage.INDEXEDDB // 强制使用 IndexedDB，避免创建 blob 检测键
 })
 
 // Sample habit data
@@ -40,11 +41,11 @@ const sampleHabits = [
   },
   {
     id: '3',
-    name: 'Learning Code',
-    description: 'Learn programming for 2 hours every day',
+    name: 'Sleeping',
+    description: 'Sleep early for 8 hours every night',
     frequency: 'daily',
-    reminders: ['19:00'],
-    daysPerWeek: ['1', '2', '3', '4', '5'],
+    reminders: ['22:00'],
+    daysPerWeek: ['0', '1', '2', '3', '4', '5', '6'],
     createdAt: new Date().toISOString(),
     completedDates: []
   }
@@ -64,21 +65,9 @@ const initDatabase = async () => {
     const habits = await localforage.getItem('habits')
     if (!habits || habits.length === 0) {
       await localforage.setItem('habits', sampleHabits)
-      console.log('[DEBUG] Database initialized, sample habits added', sampleHabits)
-    } else {
-      console.log('[DEBUG] Database already exists, loaded', habits.length, 'habits')
-    }
-    
-    // Initialize reminder settings
-    const reminderSettings = await localforage.getItem('reminderSettings')
-    if (!reminderSettings) {
-      await localforage.setItem('reminderSettings', sampleReminderSettings)
-      console.log('[DEBUG] Reminder settings initialized, default settings added', sampleReminderSettings)
-    } else {
-      console.log('[DEBUG] Reminder settings already exist', reminderSettings)
     }
   } catch (error) {
-    console.error('[DEBUG] Database initialization failed:', error)
+    console.error('Database initialization failed:', error)
   }
 }
 
@@ -86,10 +75,9 @@ const initDatabase = async () => {
 export const getHabits = async () => {
   try {
     const habits = await localforage.getItem('habits')
-    console.log('[DEBUG] Get all habits:', habits || [])
     return habits || []
   } catch (error) {
-    console.error('[DEBUG] Get habits failed:', error)
+    console.error('Get habits failed:', error)
     return []
   }
 }
@@ -118,14 +106,13 @@ export const addHabit = async (habit) => {
     }
     habits.push(newHabit)
     await localforage.setItem('habits', habits)
-    console.log('[DEBUG] Successfully added habit:', newHabit)
     
     // Notify reminder scheduler that new habit has been added
     handleHabitChange(newHabit)
     
     return newHabit
   } catch (error) {
-    console.error('[DEBUG] Add habit failed:', error)
+    console.error('Add habit failed:', error)
     return null
   }
 }
@@ -136,30 +123,23 @@ export const updateHabit = async (id, updatedData) => {
     const habits = await getHabits()
     const index = habits.findIndex(habit => habit.id === id)
     if (index === -1) {
-      console.log('[DEBUG] Habit not found, ID:', id)
       return null
     }
-    
-    console.log('[DEBUG] Original habit data:', habits[index])
-    console.log('[DEBUG] Update data:', updatedData)
     
     const updatedHabit = {
       ...habits[index],
       ...updatedData
     }
     
-    console.log('[DEBUG] Updated habit data:', updatedHabit)
-    
     habits[index] = updatedHabit
     await localforage.setItem('habits', habits)
-    console.log('[DEBUG] Successfully updated habit:', updatedHabit)
     
     // Notify reminder scheduler that habit has been updated
     handleHabitChange(updatedHabit)
     
     return updatedHabit
   } catch (error) {
-    console.error('[DEBUG] Update habit failed:', error)
+    console.error('Update habit failed:', error)
     return null
   }
 }
@@ -171,20 +151,17 @@ export const deleteHabit = async (id) => {
     const filteredHabits = habits.filter(habit => habit.id !== id)
     
     if (filteredHabits.length === habits.length) {
-      console.log('[DEBUG] Habit not found, ID:', id)
       return false // Habit not found
     }
     
     await localforage.setItem('habits', filteredHabits)
-    console.log('[DEBUG] Successfully deleted habit, ID:', id)
-    console.log('[DEBUG] Remaining habits count:', filteredHabits.length)
     
     // Notify reminder scheduler that habit has been deleted, clear related timers
     clearHabitReminders(id)
     
     return true
   } catch (error) {
-    console.error('[DEBUG] Delete habit failed:', error)
+    console.error('Delete habit failed:', error)
     return false
   }
 }
@@ -196,7 +173,6 @@ export const toggleHabitComplete = async (id, date) => {
     const habit = habits.find(habit => habit.id === id)
     
     if (!habit) {
-      console.log('[DEBUG] Habit not found, ID:', id)
       return false
     }
     
@@ -205,17 +181,14 @@ export const toggleHabitComplete = async (id, date) => {
     
     if (index === -1) {
       habit.completedDates.push(dateStr)
-      console.log('[DEBUG] Mark habit as completed:', habit.name, 'date:', dateStr)
     } else {
       habit.completedDates.splice(index, 1)
-      console.log('[DEBUG] Cancel habit completion:', habit.name, 'date:', dateStr)
     }
     
     await localforage.setItem('habits', habits)
-    console.log('[DEBUG] Habit completion status updated:', habit)
     return habit
   } catch (error) {
-    console.error('[DEBUG] Toggle habit completion failed:', error)
+    console.error('Toggle habit completion failed:', error)
     return false
   }
 }
@@ -268,10 +241,8 @@ export const exportData = async () => {
       } catch (err) {
         // User cancelled or API not supported, fallback to traditional download
         if (err.name === 'AbortError') {
-          console.log('[DEBUG] User cancelled save operation')
           return false
         }
-        console.log('[DEBUG] File System Access API failed, using traditional download')
       }
     }
     
@@ -282,7 +253,6 @@ export const exportData = async () => {
     a.download = `doneit-backup-${new Date().toISOString().split('T')[0]}.json`
     a.click()
     URL.revokeObjectURL(url)
-    console.log('[DEBUG] Data downloaded')
     return true
   } catch (error) {
     console.error('Export data failed:', error)
@@ -363,7 +333,7 @@ export const getReminderSettings = async () => {
     const settings = await localforage.getItem('reminderSettings')
     return settings || sampleReminderSettings
   } catch (error) {
-    console.error('[DEBUG] Get reminder settings failed:', error)
+    console.error('Get reminder settings failed:', error)
     return sampleReminderSettings
   }
 }
@@ -374,14 +344,13 @@ export const updateReminderSettings = async (settings) => {
     const currentSettings = await getReminderSettings()
     const newSettings = { ...currentSettings, ...settings }
     await localforage.setItem('reminderSettings', newSettings)
-    console.log('[DEBUG] Reminder settings updated:', newSettings)
     
     // Notify reminder scheduler that settings have been updated
     handleReminderSettingsChange()
     
     return newSettings
   } catch (error) {
-    console.error('[DEBUG] Update reminder settings failed:', error)
+    console.error('Update reminder settings failed:', error)
     return null
   }
 }
@@ -393,7 +362,6 @@ export const addHabitReminder = async (habitId, time) => {
     const habit = habits.find(h => h.id === habitId)
     
     if (!habit) {
-      console.log('[DEBUG] Habit not found, ID:', habitId)
       return false
     }
     
@@ -409,13 +377,12 @@ export const addHabitReminder = async (habitId, time) => {
       habit.reminders.sort()
       
       await localforage.setItem('habits', habits)
-      console.log('[DEBUG] Added reminder to habit:', habit.name, 'time:', time)
       return true
     }
     
     return false
   } catch (error) {
-    console.error('[DEBUG] Add habit reminder failed:', error)
+    console.error('Add habit reminder failed:', error)
     return false
   }
 }
@@ -427,7 +394,6 @@ export const removeHabitReminder = async (habitId, time) => {
     const habit = habits.find(h => h.id === habitId)
     
     if (!habit || !habit.reminders) {
-      console.log('[DEBUG] Habit or reminders not found, ID:', habitId)
       return false
     }
     
@@ -436,13 +402,12 @@ export const removeHabitReminder = async (habitId, time) => {
     
     if (habit.reminders.length !== initialLength) {
       await localforage.setItem('habits', habits)
-      console.log('[DEBUG] Removed reminder from habit:', habit.name, 'time:', time)
       return true
     }
     
     return false
   } catch (error) {
-    console.error('[DEBUG] Remove habit reminder failed:', error)
+    console.error('Remove habit reminder failed:', error)
     return false
   }
 }
@@ -453,7 +418,7 @@ export const getHabitsWithReminders = async () => {
     const habits = await getHabits()
     return habits.filter(habit => habit.reminders && habit.reminders.length > 0)
   } catch (error) {
-    console.error('[DEBUG] Get habits with reminders failed:', error)
+    console.error('Get habits with reminders failed:', error)
     return []
   }
 }
@@ -465,7 +430,6 @@ initDatabase()
 if (typeof window !== 'undefined') {
   window.clearDoneItData = async () => {
     await clearAllData()
-    console.log('[DEBUG] Data cleared, please refresh the page')
     location.reload()
   }
 }

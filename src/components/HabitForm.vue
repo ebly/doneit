@@ -123,8 +123,6 @@ const submitForm = () => {
     return
   }
 
-  console.log('[DEBUG] selectedDays.value:', selectedDays.value)
-
   // Combine hour and minute into full time
   const combinedTime = combineTime()
   // 00:00 是有效时间（深夜 12 点）
@@ -138,8 +136,6 @@ const submitForm = () => {
     daysPerWeek: Array.from(selectedDays.value),
     icon: habitIcon.value
   }
-
-  console.log('[DEBUG] habitData:', habitData)
 
   emit('add', habitData)
   emit('update:visible', false)
@@ -178,7 +174,6 @@ const toggleDaySelection = (dayIndex) => {
     // 如果未选中，则添加选中
     selectedDays.value.push(dayIndex)
   }
-  console.log('[DEBUG] selectedDays after toggle:', selectedDays.value)
 }
 
 // 处理图标选择
@@ -351,5 +346,19 @@ const handleIconSelect = (icon) => {
 .icon-item.selected {
   background-color: var(--el-color-primary-light-9);
   border: 2px solid var(--el-color-primary);
+}
+
+.dark-mode .icon-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.dark-mode .icon-item.selected {
+  background-color: var(--bg-tertiary);
+  border-color: var(--primary-color);
+}
+
+/* el-dialog 暗色模式 */
+.dark-mode :deep(.el-dialog) {
+  background-color: var(--bg-secondary);
 }
 </style>

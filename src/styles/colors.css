@@ -12,6 +12,8 @@
   --text-primary: #2c3e50;
   --text-secondary: #666;
   --text-light: #95a5a6;
+  --text-muted: #95a5a6;
+  --text-disabled: #666666;
 
   /* 背景颜色 */
   --bg-primary: #f8f8fc;
@@ -27,6 +29,18 @@
   --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-xl: 0 5px 20px rgba(0, 0, 0, 0.2);
+
+  /* 图表颜色 */
+  --chart-bg: #ebedf0;
+  --chart-gap: #ffffff;
+  --chart-success-1: #98FB98;
+  --chart-success-2: #3CB371;
+  --chart-success-3: #2E8B57;
+  --chart-success-4: #27AE60;
+  --chart-text: #666666;
+  --chart-axis: #888888;
+
+  --el-card-border-color: #ebeef5;
 }
 
 /* 暗色主题 - 手动切换 */
@@ -43,11 +57,13 @@ body.dark-mode {
   --text-primary: #ecf0f1;
   --text-secondary: #bdc3c7;
   --text-light: #95a5a6;
+  --text-muted: #95a5a6;
+  --text-disabled: #666666;
 
   /* 背景颜色 */
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #16213e;
-  --bg-tertiary: #0f3460;
+  --bg-primary: #2b2b2b;
+  --bg-secondary: #333333;
+  --bg-tertiary: #3d3d3d;
 
   /* 边框颜色 */
   --border-color: #444;
@@ -58,4 +74,27 @@ body.dark-mode {
   --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 5px 20px rgba(0, 0, 0, 0.6);
+
+  /* 图表颜色 */
+  --chart-bg: #2b2b2b;
+  --chart-gap: #1a1a1a;
+  --chart-success-1: #98FB98;
+  --chart-success-2: #3CB371;
+  --chart-success-3: #2E8B57;
+  --chart-success-4: #27AE60;
+  --chart-text: #888888;
+  --chart-axis: #888888;
+
+  --el-border-color: #3a3a3a;
+  --el-card-border-color: #3a3a3a;
+  --el-border-color-light: #3a3a3a;
+  --el-border-color-lighter: #3a3a3a;
+  --el-fill-color-lighter: #2b2b2b;
+  --el-bg-color: #2b2b2b;
+  --el-bg-color-overlay: #2b2b2b;
+  --el-bg-color-page: #2b2b2b;
+  --el-text-color-primary: #e0e0e0;
+  --el-text-color-regular: #b0b0b0;
+  --el-text-color-secondary: #888888;
+  --el-text-color-placeholder: #666666;
 }

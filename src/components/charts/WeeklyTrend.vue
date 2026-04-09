@@ -123,11 +123,11 @@ const chartData = computed(() => {
           
           // 如果没有配置这一天，返回灰色
           if (!isDayEnabled) {
-            return '#cccccc'
+            return 'var(--text-light)'
           }
           
           // 如果配置了这一天，返回绿色
-          return '#42b983'
+          return 'var(--success-color)'
         }
       }
     })
@@ -144,7 +144,7 @@ const initChart = () => {
     const isDayEnabled = !props.habit.daysPerWeek || 
                          props.habit.daysPerWeek.length === 0 || 
                          props.habit.daysPerWeek.includes(dayIndex.toString())
-    return isDayEnabled ? '#333' : '#cccccc'
+    return isDayEnabled ? 'var(--text-primary)' : 'var(--text-light)'
   })
   
   const option = {
@@ -207,27 +207,18 @@ onMounted(async () => {
 
 <style scoped>
 .weekly-trend-chart {
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: 16px;
-}
-
-.dark-mode .weekly-trend-chart {
-  background: #2d2d2d;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .chart-title {
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
-}
-
-.dark-mode .chart-title {
-  color: #e0e0e0;
+  color: var(--text-primary);
 }
 
 .chart-container {

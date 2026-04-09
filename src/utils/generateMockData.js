@@ -6,12 +6,9 @@
  */
 export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
   try {
-    console.log('[INFO] 开始生成模拟数据...')
-    
     const habits = await getHabits()
     
     if (!habits || habits.length === 0) {
-      console.log('[INFO] 没有找到习惯数据，请先在应用中创建习惯')
       return
     }
     
@@ -26,13 +23,9 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     
-    console.log(`[INFO] 数据生成范围：${startDate.toISOString().split('T')[0]} 到 ${yesterday.toISOString().split('T')[0]}`)
-    
     // 为每个习惯生成随机的完成日期
     for (const habit of habits) {
       const completedDates = []
-      
-      console.log(`[INFO] 处理习惯：${habit.name}, daysPerWeek: ${habit.daysPerWeek?.join(',')}`)
       
       // 遍历从 startDate 到 yesterday 的所有日期
       for (let d = new Date(startDate); d <= yesterday; d.setDate(d.getDate() + 1)) {
@@ -83,15 +76,11 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
       // 更新习惯的完成日期（只更新 completedDates 字段）
       const updateData = { completedDates }
       await updateHabit(habit.id, updateData)
-      
-      console.log(`[INFO] 为习惯 "${habit.name}" 生成了 ${completedDates.length} 条完成记录`)
     }
     
     // 重新加载数据
     await loadHabits()
-    
-    console.log('[INFO] 模拟数据生成完成！')
   } catch (error) {
-    console.error('[ERROR] 生成模拟数据失败:', error)
+    console.error('生成模拟数据失败:', error)
   }
 }

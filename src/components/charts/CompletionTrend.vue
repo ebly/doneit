@@ -95,7 +95,13 @@ const option = computed(() => ({
     axisLabel: {
       rotate: 0,
       fontSize: 10,
-      interval: Math.floor(chartData.value.dates.length / 7)
+      interval: Math.floor(chartData.value.dates.length / 7),
+      color: document.body.classList.contains('dark-mode') ? '#888' : '#666'
+    },
+    axisLine: {
+      lineStyle: {
+        color: document.body.classList.contains('dark-mode') ? '#444' : '#ddd'
+      }
     }
   },
   yAxis: {
@@ -104,11 +110,12 @@ const option = computed(() => ({
     max: 100,
     axisLabel: {
       formatter: '{value}%',
-      fontSize: 10
+      fontSize: 10,
+      color: document.body.classList.contains('dark-mode') ? '#888' : '#666'
     },
     splitLine: {
       lineStyle: {
-        color: '#e0e0e0',
+        color: document.body.classList.contains('dark-mode') ? '#444' : '#ddd',
         type: 'dashed'
       }
     }
@@ -136,10 +143,13 @@ const option = computed(() => ({
           x2: 0,
           y2: 1,
           colorStops: [
-            { offset: 0, color: 'rgba(50, 112, 202, 0.3)' },
-            { offset: 1, color: 'rgba(50, 112, 202, 0.05)' }
+            { offset: 0, color: 'rgba(50, 112, 202, 0.2)' },
+            { offset: 1, color: 'rgba(50, 112, 202, 0.02)' }
           ]
         }
+      },
+      emphasis: {
+        disabled: true
       }
     }
   ]

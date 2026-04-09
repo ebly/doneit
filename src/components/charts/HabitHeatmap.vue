@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { useTheme } from '../../composables/useTheme'
 import { useChart } from '../../composables/useChart'
+
+const { isDarkMode } = useTheme()
 
 const props = defineProps({
   habit: {
@@ -60,38 +63,42 @@ const option = computed(() => {
   }
 
   return {
+    backgroundColor: isDarkMode.value ? '#2B2B2B' : '#ffffff',
     visualMap: {
       show: false,
       min: 0,
       max: 1,
       calculable: false,
       inRange: {
-        color: [
-          '#ebedf0',
-          '#98FB98',
-          '#3CB371',
-          '#2E8B57',
-          '#27AE60'
+        color: isDarkMode.value ? [
+          '#3a3a3a',
+          '#90EE90',
+          '#32CD32',
+          '#228B22',
+          '#006400'
+        ] : [
+          '#d0d0d0',
+          '#90EE90',
+          '#32CD32',
+          '#228B22',
+          '#006400'
         ]
       },
       outOfRange: {
-        color: ['#ebedf0']
+        color: isDarkMode.value ? '#3a3a3a' : '#d0d0d0'
       }
     },
     calendar: {
       top: 30,
-      left: '3%',
+      left: '4%',
       right: '4%',
       bottom: 10,
-      cellSize: [8, 8],
+      cellSize: [10, 10],
       range: [formatDateToLocal(startDate), formatDateToLocal(today)],
       itemStyle: {
-        borderWidth: 4,
-        borderColor: '#fff',
-        borderRadius: 4
-      },
-      dayStyle: {
-        color: '#ebedf0'
+        borderWidth: 5,
+        borderColor: isDarkMode.value ? '#2B2B2B' : '#ffffff',
+        borderRadius: 0
       },
       yearLabel: {
         show: false
@@ -99,13 +106,13 @@ const option = computed(() => {
       monthLabel: {
         nameMap: 'en',
         fontSize: 10,
-        color: '#666',
+        color: isDarkMode.value ? '#888' : '#666',
         align: 'center'
       },
       dayLabel: {
         show: true,
         fontSize: 9,
-        color: '#666',
+        color: isDarkMode.value ? '#888' : '#666',
         firstDay: 0,
         nameMap: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
       },
@@ -128,25 +135,14 @@ const option = computed(() => {
         show: false
       },
       itemStyle: {
-        borderRadius: 4,
-        color: function(params) {
-          if (!params.value || params.value[1] === 0) {
-            return '#ebedf0'
-          }
-          return null
-        }
-      },
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
+        borderRadius: 0,
+        borderWidth: 0,
       }
     }]
   }
 })
 
-watch([() => props.habit, () => props.habits, () => props.dateRange, () => props.isAllHabits], () => {
+watch([() => props.habit, () => props.habits, () => props.dateRange, () => props.isAllHabits, isDarkMode], () => {
   initChart(option.value)
 }, { deep: true })
 
@@ -164,5 +160,27 @@ onMounted(async () => {
 .heatmap-chart {
   width: 100%;
   height: 160px;
+  background-color: transparent;
+}
+
+/* 确保父容器在不同模式下背景正确 */
+:deep(.dark-mode) .heatmap-chart {
+  background-color: var(--chart-bg) !important;
+}
+
+/* 移除 canvas 可能存在的默认背景 */
+.heatmap-chart :deep(canvas) {
+  background-color: transparent !important;
+}
+
+.heatmap-chart canvas {
+  background-color: transparent !important;
+}
+
+/* 消除 canvas 渲染时的抗锯齿白边 */
+.heatmap-chart :deep(canvas) {
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  image-rendering: pixelated !important;
 }
 </style>

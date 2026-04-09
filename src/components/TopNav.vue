@@ -31,6 +31,7 @@ const handleAvatarClick = () => {
     <header class="header">
       <div class="logo">
         <h1>DoneIt</h1>
+        <span class="version">v1.0.2</span>
       </div>
       <div class="header-right">
         <nav class="nav">
@@ -75,11 +76,24 @@ const handleAvatarClick = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+}
+
 .logo h1 {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
   color: white;
+}
+
+.logo .version {
+  margin-left: 16px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1;
 }
 
 .header-right {

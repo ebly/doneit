@@ -4,7 +4,7 @@
  */
 import { getHabitsWithReminders } from './storage'
 import { getReminderSettings } from './storage'
-import { requestNotificationPermission, showNotification, calculateNextReminderTime, calculateReminderDelay } from './notification'
+import { requestNotificationPermission, showNotification, calculateReminderDelay } from './notification'
 
 // 存储所有定时器ID
 let timers = new Map()
@@ -29,7 +29,6 @@ const sendHabitReminder = async (habit, reminderTime) => {
     // 检查提醒设置
     const settings = await getReminderSettings()
     if (!settings.enabled) {
-      console.log('[REMINDER] 提醒已全局禁用')
       return false
     }
     
@@ -38,7 +37,6 @@ const sendHabitReminder = async (habit, reminderTime) => {
       // 尝试请求权限
       const granted = await requestNotificationPermission()
       if (!granted) {
-        console.log('[REMINDER] 没有通知权限，无法发送提醒')
         return false
       }
     }
@@ -54,20 +52,16 @@ const sendHabitReminder = async (habit, reminderTime) => {
       },
       onClick: () => {
         // 点击通知时的处理逻辑
-        console.log('[REMINDER] 用户点击了提醒:', habit.name)
         // 可以在这里添加导航逻辑
       }
     })
     
     if (notification) {
-      console.log('[REMINDER] 发送提醒成功:', habit.name)
       return true
     } else {
-      console.log('[REMINDER] 发送提醒失败:', habit.name)
       return false
     }
   } catch (error) {
-    console.error('[REMINDER] 发送提醒时发生错误:', error)
     return false
   }
 }
@@ -98,8 +92,6 @@ const setupHabitReminders = async (habit) => {
     // 存储定时器ID
     const key = `${habit.id}-${reminderTime}`
     timers.set(key, timerId)
-    
-    console.log('[REMINDER] 为习惯设置提醒:', habit.name, '时间:', reminderTime, '延迟:', delay, 'ms')
   }
 }
 
@@ -109,7 +101,6 @@ const clearHabitReminders = (habitId) => {
     if (key.startsWith(habitId)) {
       clearTimeout(timerId)
       timers.delete(key)
-      console.log('[REMINDER] 清除提醒定时器:', key)
     }
   }
 }
@@ -147,25 +138,20 @@ const clearAllReminders = () => {
     clearTimeout(timerId)
   }
   timers.clear()
-  console.log('[REMINDER] 已清除所有提醒定时器')
 }
 
 // 监听习惯变化
 const handleHabitChange = async (habit) => {
-  console.log('[REMINDER] 习惯变化，更新提醒:', habit.name)
   await setupHabitReminders(habit)
 }
 
 // 监听提醒设置变化
 const handleReminderSettingsChange = async () => {
-  console.log('[REMINDER] 提醒设置变化，重新设置所有提醒')
   await setupAllReminders()
 }
 
 // 初始化提醒调度
 const initReminderScheduler = async () => {
-  console.log('[REMINDER] 初始化提醒调度器')
-  
   // 尝试请求通知权限
   await requestNotificationPermission()
   
@@ -174,7 +160,6 @@ const initReminderScheduler = async () => {
   
   // Check every minute (as a backup mechanism)
   setInterval(async () => {
-    console.log('[REMINDER] Executing per-minute check')
     try {
       const habits = await getHabitsWithReminders()
       const settings = await getReminderSettings()
@@ -189,7 +174,7 @@ const initReminderScheduler = async () => {
         }
       }
     } catch (error) {
-      console.error('[REMINDER] Error during per-minute check:', error)
+      console.error('Error during per-minute check:', error)
     }
   }, 60000) // Check every minute
 }

@@ -2,7 +2,7 @@
   <div class="chart-wrapper">
     <div ref="chartDom" class="chart-container"></div>
     <div class="chart-title">
-      <span class="color-dot" style="background-color: #67C23A;"></span>
+      <span class="color-dot" style="background-color: var(--success-color);"></span>
       <span>Max Streak Days</span>
     </div>
   </div>
@@ -117,13 +117,13 @@ const option = computed(() => ({
     axisLine: {
       show: true,
       lineStyle: {
-        color: '#e0e0e0'
+        color: 'var(--border-light)'
       }
     },
     splitLine: {
       show: true,
       lineStyle: {
-        color: '#f0f0f0'
+        color: 'var(--bg-tertiary)'
       }
     }
   },
@@ -136,16 +136,17 @@ const option = computed(() => ({
       symbol: 'circle',
       symbolSize: 6,
       areaStyle: {
-        color: 'rgba(103, 194, 58, 0.3)'
+        color: 'rgba(50, 112, 202, 0.15)'
       },
       itemStyle: {
-        color: '#67C23A'
+        color: '#3270ca'
+      },
+      lineStyle: {
+        color: '#3270ca',
+        width: 2
       },
       emphasis: {
-        focus: 'series',
-        itemStyle: {
-          symbolSize: 8
-        }
+        disabled: true
       }
     }
   ]
@@ -182,7 +183,7 @@ onMounted(async () => {
   gap: 8px;
   padding-top: 8px;
   font-size: 14px;
-  color: #999999;
+  color: var(--text-light);
   font-weight: normal;
 }
 

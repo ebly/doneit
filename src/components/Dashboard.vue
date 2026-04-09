@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Star, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getHabits, toggleHabitComplete, exportData } from '../services/storage.js'
@@ -43,8 +43,10 @@ const getCurrentWeekDates = () => {
   return weekDates
 }
 
-const weekDates = ref(getCurrentWeekDates())
 const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+// 计算本周日期（从周日开始）- 使用计算属性，每次都会重新获取当前日期
+const weekDates = computed(() => getCurrentWeekDates())
 
 // 检查习惯在特定日期是否完成
 const isHabitCompletedOnDate = (habit, date) => {
@@ -212,7 +214,6 @@ const toggleDay = async (habitId, dayIndex) => {
 
   await toggleHabitComplete(habitId, date)
   const updatedHabits = await getHabits()
-  console.log('[DEBUG] Dashboard: Emitting updated habits:', updatedHabits)
   emit('update:habits', updatedHabits)
 }
 
@@ -396,8 +397,41 @@ onMounted(() => {
 </template>
 
 <style scoped>
+:root {
+  --el-table-expanded-cell-bg-color: transparent;
+}
+
 :deep(.el-table__expanded-cell) {
-  padding: 10px;
+  padding: 20px;
+  background-color: transparent;
+}
+
+:deep(.el-table__expanded-cell .el-table__cell) {
+  display: block;
+  width: 100%;
+  background-color: transparent;
+}
+
+.dark-mode :deep(.el-table__expanded-cell) {
+  background-color: transparent;
+}
+
+.detail-item {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 120px;
+}
+
+.detail-value {
+  color: var(--text-secondary);
+  flex: 1;
+  word-break: break-word;
 }
 .dashboard-header {
   display: flex;
@@ -445,7 +479,11 @@ onMounted(() => {
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
-  background-color: white;
+  background-color: var(--bg-secondary);
+}
+
+.dark-mode .day-icon {
+  background-color: var(--bg-primary);
 }
 
 .day-icon:hover {
@@ -503,5 +541,24 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: transparent;
+  border-radius: 6px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 120px;
+}
+
+.detail-value {
+  color: var(--text-secondary);
+  flex: 1;
 }
 </style>
