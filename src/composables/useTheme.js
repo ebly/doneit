@@ -13,7 +13,7 @@ export const useTheme = () => {
     if (savedTheme) {
       isDarkMode.value = savedTheme === 'dark'
     } else {
-      // 默认使用浅色模式
+      // 默认使用浅色模式，忽略系统偏好
       isDarkMode.value = false
     }
     applyTheme()

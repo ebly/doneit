@@ -89,7 +89,7 @@ const handleFileChange = (event) => {
     <template #footer>
       <div style="width: 100%; text-align: center;">
         <el-button type="primary" @click="saveUsername">Save</el-button>
-        <div style="color: gray; font-size: 12px; margin-top: 8px;">v1.0.1</div>
+        <div style="color: gray; font-size: 12px; margin-top: 8px;">v1.0.2</div>
       </div>
     </template>
   </el-dialog>
