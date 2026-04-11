@@ -3,20 +3,56 @@ import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import fs from 'fs'
+import path from 'path'
+
+// Google Analytics 注入插件（只在生产构建时生效）
+const injectAnalyticsPlugin = () => {
+  return {
+    name: 'inject-analytics',
+    closeBundle() {
+      const distPath = path.resolve(__dirname, 'dist', 'index.html')
+      const gaScript = `<!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YB1BMLJPC7"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-YB1BMLJPC7');
+  </script>
+`
+      if (fs.existsSync(distPath)) {
+        let content = fs.readFileSync(distPath, 'utf-8')
+        // 在 </head> 标签前插入 GA 代码
+        content = content.replace('</head>', `${gaScript}</head>`)
+        fs.writeFileSync(distPath, content, 'utf-8')
+        console.log('[inject-analytics] Google Analytics injected to dist/index.html')
+      }
+    }
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/',   // 根路径
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    }
+  },
   plugins: [
     vue(),
-    // 自动导入Element Plus组件
+    // 自动导入 Element Plus 组件
     Components({
       resolvers: [ElementPlusResolver()]
     }),
-    // 自动导入Element Plus相关函数
+    // 自动导入 Element Plus 相关函数
     AutoImport({
       resolvers: [ElementPlusResolver()]
-    })
+    }),
+    // 生产环境注入 Google Analytics
+    injectAnalyticsPlugin()
   ],
   css: {
     // 优化CSS
