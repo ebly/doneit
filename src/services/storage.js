@@ -227,6 +227,27 @@ export const toggleHabitComplete = async (id, date) => {
   }
 }
 
+// Convert completion record to standard object format
+// For old string data, treat as 00:00
+const normalizeCompletion = (completion) => {
+  if (typeof completion === 'string') {
+    // Old format: "YYYY-MM-DD" or "YYYY-MM-DD HH:mm"
+    const parts = completion.split(' ')
+    const dateStr = parts[0]
+    const timeStr = parts[1] || '00:00' // Default to 00:00 if no time
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const [hours, minutes] = timeStr.split(':').map(Number)
+    const completionDate = new Date(year, month - 1, day, hours, minutes)
+    
+    return {
+      dateTime: `${dateStr} ${timeStr}`,
+      timestamp: completionDate.getTime()
+    }
+  }
+  // Already in object format
+  return completion
+}
+
 // Check if habit is completed on specific date
 export const isHabitCompleted = async (id, date) => {
   try {
@@ -460,6 +481,41 @@ export const getHabitsWithReminders = async () => {
   }
 }
 
+// Migrate old completion records to new format
+export const migrateCompletionRecords = async () => {
+  try {
+    const habits = await getHabits()
+    let migrated = false
+    
+    habits.forEach(habit => {
+      if (habit.completedDates) {
+        const newCompletedDates = habit.completedDates.map(completion => {
+          if (typeof completion === 'string' || (completion && !completion.timestamp)) {
+            migrated = true
+            return normalizeCompletion(completion)
+          }
+          return completion
+        })
+        
+        if (migrated) {
+          habit.completedDates = newCompletedDates
+        }
+      }
+    })
+    
+    if (migrated) {
+      await localforage.setItem('habits', habits)
+      console.log('[DEBUG] Migrated completion records to new format')
+      return true
+    }
+    
+    return false
+  } catch (error) {
+    console.error('Migrate completion records failed:', error)
+    return false
+  }
+}
+
 // Remove specific date from all habits (e.g., remove April 12 records)
 export const removeRecordsByDate = async (targetDate) => {
   try {
@@ -520,5 +576,6 @@ export default {
   addHabitReminder,
   removeHabitReminder,
   getHabitsWithReminders,
+  migrateCompletionRecords,
   removeRecordsByDate
 }
