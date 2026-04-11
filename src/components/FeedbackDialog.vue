@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { ChatLineRound } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { checkTimeTampering } from '@/utils/timeValidator'
 
 const props = defineProps({
   visible: {
@@ -21,90 +22,10 @@ const SUBMISSION_COOLDOWN = 60 * 1000 // 两次提交间隔：60 秒
 const DAILY_SUBMISSION_LIMIT = 3 // 每天最多提交次数
 const STORAGE_KEY_SUBMISSIONS = 'feedback_submissions'
 const STORAGE_KEY_LAST_SUBMISSION = 'feedback_last_submission'
-const STORAGE_KEY_SERVER_TIME = 'feedback_server_time_offset'
-const STORAGE_KEY_TIME_CHECKS = 'feedback_time_checks'
 
 const feedbackContent = ref('')
 const feedbackEmail = ref('')
 const isSubmitting = ref(false)
-
-// 获取服务器时间（使用网络时间 API）
-const getServerTime = async (): Promise<number | null> => {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
-    
-    const response = await fetch('https://worldtimeapi.org/api/ip', { 
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' }
-    })
-    clearTimeout(timeoutId)
-    
-    if (response.ok) {
-      const data = await response.json()
-      return new Date(data.datetime).getTime()
-    }
-  } catch (error) {
-    console.warn('Failed to get server time, using fallback:', error)
-  }
-  
-  // Fallback: 使用本地时间，但记录警告
-  return null
-}
-
-// 检查时间是否被篡改
-const checkTimeTampering = async (): Promise<{ valid: boolean, message?: string }> => {
-  const now = Date.now()
-  const serverTime = await getServerTime()
-  
-  // 获取上次记录的时间检查点
-  const timeChecks = JSON.parse(localStorage.getItem(STORAGE_KEY_TIME_CHECKS) || '[]')
-  
-  if (timeChecks.length > 0) {
-    const lastCheck = timeChecks[timeChecks.length - 1]
-    
-    // 如果服务器时间可用，检查是否与上次记录的时间一致
-    if (serverTime) {
-      // 记录服务器时间与本地时间的偏移
-      const offset = serverTime - now
-      localStorage.setItem(STORAGE_KEY_SERVER_TIME, JSON.stringify({ offset, timestamp: now }))
-      
-      // 如果本地时间与服务器时间差异超过 5 分钟，可能是时间篡改
-      if (Math.abs(offset) > 5 * 60 * 1000) {
-        return { 
-          valid: false, 
-          message: 'System time appears to be incorrect. Please check your system clock.' 
-        }
-      }
-    }
-    
-    // 检查本地时间是否回拨
-    if (now < lastCheck.localTime) {
-      const timeDifference = lastCheck.localTime - now
-      if (timeDifference > 60 * 1000) { // 允许 1 分钟的误差
-        return { 
-          valid: false, 
-          message: 'System time has been set back. Please use the correct system time.' 
-        }
-      }
-    }
-  }
-  
-  // 记录当前时间检查点
-  timeChecks.push({
-    localTime: now,
-    serverTime: serverTime || null,
-    timestamp: new Date().toISOString()
-  })
-  
-  // 只保留最近的 10 条记录
-  if (timeChecks.length > 10) {
-    timeChecks.shift()
-  }
-  localStorage.setItem(STORAGE_KEY_TIME_CHECKS, JSON.stringify(timeChecks))
-  
-  return { valid: true }
-}
 
 // 检查提交限制
 const checkSubmissionLimits = async () => {
