@@ -50,8 +50,10 @@ const calendarCells = computed(() => {
     // 查找这一天完成的习惯
     const completions = props.habits.filter(habit => {
       if (!habit.completedDates) return false
-      return habit.completedDates.some(completedDate => {
-        const completedDateStr = completedDate.split(' ')[0]
+      return habit.completedDates.some(completion => {
+        const completedDateStr = typeof completion === 'string' 
+          ? completion.split(' ')[0]
+          : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
         return completedDateStr === dateStr
       })
     })

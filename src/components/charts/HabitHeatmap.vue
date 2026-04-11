@@ -53,7 +53,12 @@ const option = computed(() => {
     let completedCount = 0
     habits.forEach(habit => {
       if (!habit.completedDates) return
-      if (habit.completedDates.some(d => d.startsWith(dateStr))) {
+      if (habit.completedDates.some(completion => {
+        const completionDate = typeof completion === 'string' 
+          ? completion 
+          : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+        return completionDate && completionDate.startsWith(dateStr)
+      })) {
         completedCount++
       }
     })

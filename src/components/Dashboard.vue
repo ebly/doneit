@@ -56,7 +56,12 @@ const isHabitCompletedOnDate = (habit, date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   const dateStr = `${year}-${month}-${day}`
-  return habit.completedDates.some(d => d.startsWith(dateStr))
+  return habit.completedDates.some(completion => {
+    const completionDate = typeof completion === 'string' 
+      ? completion 
+      : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+    return completionDate && completionDate.startsWith(dateStr)
+  })
 }
 
 // 计算本周可打卡的天数（根据 daysPerWeek 设置）
@@ -104,7 +109,14 @@ const calculateWeekly = (habit) => {
   let weekly = 0
   const checkedDates = new Set()
 
-  for (const dateStr of habit.completedDates) {
+  for (const completion of habit.completedDates) {
+    // Support both old string format and new object format
+    const dateStr = typeof completion === 'string' 
+      ? completion 
+      : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+    
+    if (!dateStr) continue
+    
     const checkinDate = new Date(dateStr)
     const checkinDateOnly = new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate())
     
@@ -270,7 +282,12 @@ const checkReminderWindow = () => {
         habit.daysPerWeek.includes(currentDayIndex.toString())) {
       
       // 检查今天是否已完成
-      const isCompletedToday = habit.completedDates?.includes(today)
+      const isCompletedToday = habit.completedDates?.some(completion => {
+        const completionDate = typeof completion === 'string' 
+          ? completion 
+          : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+        return completionDate === today
+      })
       
       if (isCompletedToday) continue // 已完成，跳过
 

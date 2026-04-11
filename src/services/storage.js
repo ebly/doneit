@@ -9,6 +9,29 @@ const formatDateToLocal = (date) => {
   return `${year}-${month}-${day}`
 }
 
+// Convert date to local datetime string (YYYY-MM-DD HH:mm format)
+const formatDateTimeToLocal = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+// Extract date string from completion record (supports both old string format and new object format)
+// Used for date comparison (only cares about YYYY-MM-DD)
+const extractDateFromCompletion = (completion) => {
+  if (typeof completion === 'string') {
+    // Old format: "YYYY-MM-DD" or "YYYY-MM-DD HH:mm"
+    return completion.split(' ')[0]
+  } else if (completion && typeof completion === 'object' && completion.dateTime) {
+    // New format: { dateTime: "YYYY-MM-DD HH:mm", timestamp: number }
+    return completion.dateTime.split(' ')[0]
+  }
+  return null
+}
+
 // Initialize localforage
 localforage.config({
   name: 'DoneIt',
@@ -177,12 +200,23 @@ export const toggleHabitComplete = async (id, date) => {
     }
     
     const dateStr = formatDateToLocal(date)
-    const index = habit.completedDates.indexOf(dateStr)
     
-    if (index === -1) {
-      habit.completedDates.push(dateStr)
+    // Find if already completed on this date
+    const existingIndex = habit.completedDates.findIndex(completion => {
+      const completionDate = extractDateFromCompletion(completion)
+      return completionDate === dateStr
+    })
+    
+    if (existingIndex === -1) {
+      // New completion - store with timestamp
+      const completionRecord = {
+        dateTime: formatDateTimeToLocal(date),
+        timestamp: date.getTime()
+      }
+      habit.completedDates.push(completionRecord)
     } else {
-      habit.completedDates.splice(index, 1)
+      // Remove completion
+      habit.completedDates.splice(existingIndex, 1)
     }
     
     await localforage.setItem('habits', habits)
@@ -200,7 +234,10 @@ export const isHabitCompleted = async (id, date) => {
     if (!habit) return false
     
     const dateStr = formatDateToLocal(date)
-    return habit.completedDates.includes(dateStr)
+    return habit.completedDates.some(completion => {
+      const completionDate = extractDateFromCompletion(completion)
+      return completionDate === dateStr
+    })
   } catch (error) {
     console.error('Check habit completion failed:', error)
     return false
@@ -423,6 +460,38 @@ export const getHabitsWithReminders = async () => {
   }
 }
 
+// Remove specific date from all habits (e.g., remove April 12 records)
+export const removeRecordsByDate = async (targetDate) => {
+  try {
+    const habits = await getHabits()
+    let modified = false
+    
+    habits.forEach(habit => {
+      if (habit.completedDates) {
+        const initialLength = habit.completedDates.length
+        habit.completedDates = habit.completedDates.filter(completion => {
+          const completionDate = extractDateFromCompletion(completion)
+          return completionDate !== targetDate
+        })
+        if (habit.completedDates.length !== initialLength) {
+          modified = true
+        }
+      }
+    })
+    
+    if (modified) {
+      await localforage.setItem('habits', habits)
+      console.log(`[DEBUG] Removed records for date: ${targetDate}`)
+      return true
+    }
+    
+    return false
+  } catch (error) {
+    console.error('Remove records by date failed:', error)
+    return false
+  }
+}
+
 // Initialize database
 initDatabase()
 
@@ -450,5 +519,6 @@ export default {
   updateReminderSettings,
   addHabitReminder,
   removeHabitReminder,
-  getHabitsWithReminders
+  getHabitsWithReminders,
+  removeRecordsByDate
 }

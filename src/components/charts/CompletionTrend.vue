@@ -46,7 +46,12 @@ const chartData = computed(() => {
     if (props.isAllHabits) {
       const completedCount = props.habits.filter(habit => {
         if (!habit.completedDates) return false
-        return habit.completedDates.some(d => d.startsWith(dateStr))
+        return habit.completedDates.some(completion => {
+          const completionDate = typeof completion === 'string' 
+            ? completion 
+            : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+          return completionDate && completionDate.startsWith(dateStr)
+        })
       }).length
 
       const completionRate = props.habits.length > 0
@@ -59,7 +64,12 @@ const chartData = computed(() => {
         continue
       }
 
-      const isCompleted = props.habit.completedDates.some(d => d.startsWith(dateStr))
+      const isCompleted = props.habit.completedDates.some(completion => {
+        const completionDate = typeof completion === 'string' 
+          ? completion 
+          : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+        return completionDate && completionDate.startsWith(dateStr)
+      })
       data.push(isCompleted ? 100 : 0)
     }
   }

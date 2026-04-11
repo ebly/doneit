@@ -68,7 +68,17 @@ export const generateMockData = async (getHabits, updateHabit, loadHabits) => {
               const minute = Math.floor(Math.random() * 60)
               timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
             }
-            completedDates.push(`${dateStr} ${timeStr}`)
+            
+            // Create completion record with timestamp
+            const dateTime = `${dateStr} ${timeStr}`
+            const [year, month, day] = dateStr.split('-').map(Number)
+            const [hours, minutes] = timeStr.split(':').map(Number)
+            const completionDate = new Date(year, month - 1, day, hours, minutes)
+            
+            completedDates.push({
+              dateTime,
+              timestamp: completionDate.getTime()
+            })
           }
         }
       }
