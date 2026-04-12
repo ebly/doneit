@@ -57,7 +57,10 @@ const isHabitCompletedOnDate = (habit, date) => {
   const day = String(date.getDate()).padStart(2, '0')
   const dateStr = `${year}-${month}-${day}`
   return habit.completedDates.some(d => {
-    const datePart = d.split(' ')[0]
+    // Support both string format and object format
+    const datePart = typeof d === 'string' 
+      ? d.split(' ')[0]
+      : (d.dateTime ? d.dateTime.split(' ')[0] : null)
     return datePart === dateStr
   })
 }
@@ -107,8 +110,14 @@ const calculateWeekly = (habit) => {
   let weekly = 0
   const checkedDates = new Set()
 
-  for (const dateStr of habit.completedDates) {
-    const datePart = dateStr.split(' ')[0]
+  for (const completion of habit.completedDates) {
+    // Support both string format and object format
+    const datePart = typeof completion === 'string' 
+      ? completion.split(' ')[0]
+      : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
+    
+    if (!datePart) continue
+    
     const checkinDate = new Date(datePart)
     const checkinDateOnly = new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate())
     
@@ -275,7 +284,10 @@ const checkReminderWindow = () => {
       
       // 检查今天是否已完成
       const isCompletedToday = habit.completedDates?.some(d => {
-        const datePart = d.split(' ')[0]
+        // Support both string format and object format
+        const datePart = typeof d === 'string' 
+          ? d.split(' ')[0]
+          : (d.dateTime ? d.dateTime.split(' ')[0] : null)
         return datePart === today
       })
       
