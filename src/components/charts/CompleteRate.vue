@@ -58,18 +58,10 @@ const chartData = computed(() => {
     const daysInMonth = getDaysInMonth(year, month)
     let completedDays = 0
 
-    props.habit.completedDates.forEach(completion => {
-      // Support both old string format and new object format
-      let dateStr
-      if (typeof completion === 'string') {
-        dateStr = completion
-      } else if (completion && completion.dateTime) {
-        dateStr = completion.dateTime.split(' ')[0]
-      } else {
-        return
-      }
-      
-      const [y, m, d] = dateStr.split('-').map(Number)
+    props.habit.completedDates.forEach(dateStr => {
+      // Extract date part (YYYY-MM-DD)
+      const datePart = dateStr.split(' ')[0]
+      const [y, m, d] = datePart.split('-').map(Number)
       const completedDate = new Date(y, m - 1, d)
       if (completedDate.getFullYear() === year && completedDate.getMonth() === month) {
         completedDays++

@@ -56,11 +56,9 @@ const isHabitCompletedOnDate = (habit, date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   const dateStr = `${year}-${month}-${day}`
-  return habit.completedDates.some(completion => {
-    const completionDate = typeof completion === 'string' 
-      ? completion 
-      : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
-    return completionDate && completionDate.startsWith(dateStr)
+  return habit.completedDates.some(d => {
+    const datePart = d.split(' ')[0]
+    return datePart === dateStr
   })
 }
 
@@ -109,15 +107,9 @@ const calculateWeekly = (habit) => {
   let weekly = 0
   const checkedDates = new Set()
 
-  for (const completion of habit.completedDates) {
-    // Support both old string format and new object format
-    const dateStr = typeof completion === 'string' 
-      ? completion 
-      : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
-    
-    if (!dateStr) continue
-    
-    const checkinDate = new Date(dateStr)
+  for (const dateStr of habit.completedDates) {
+    const datePart = dateStr.split(' ')[0]
+    const checkinDate = new Date(datePart)
     const checkinDateOnly = new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate())
     
     // 检查是否在本周范围内
@@ -282,11 +274,9 @@ const checkReminderWindow = () => {
         habit.daysPerWeek.includes(currentDayIndex.toString())) {
       
       // 检查今天是否已完成
-      const isCompletedToday = habit.completedDates?.some(completion => {
-        const completionDate = typeof completion === 'string' 
-          ? completion 
-          : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
-        return completionDate === today
+      const isCompletedToday = habit.completedDates?.some(d => {
+        const datePart = d.split(' ')[0]
+        return datePart === today
       })
       
       if (isCompletedToday) continue // 已完成，跳过

@@ -64,14 +64,8 @@ const stats = computed(() => {
     props.habits.forEach(habit => {
       if (!habit.completedDates) return
       
-      habit.completedDates.forEach(completion => {
-        // Support both old string format and new object format
-        const datePart = typeof completion === 'string' 
-          ? completion.split(' ')[0]
-          : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
-        
-        if (!datePart) return
-        
+      habit.completedDates.forEach(dateStr => {
+        const datePart = dateStr.split(' ')[0]
         // Parse date as local time to avoid timezone issues
         const [year, month, day] = datePart.split('-').map(Number)
         const checkinDate = new Date(year, month - 1, day)
@@ -91,11 +85,9 @@ const stats = computed(() => {
     allDates.forEach(dateStr => {
       const allCompleted = props.habits.every(habit => {
         if (!habit.completedDates) return false
-        return habit.completedDates.some(completion => {
-          const completionDate = typeof completion === 'string' 
-            ? completion 
-            : (completion.dateTime ? completion.dateTime.split(' ')[0] : null)
-          return completionDate && completionDate.startsWith(dateStr)
+        return habit.completedDates.some(d => {
+          const datePart = d.split(' ')[0]
+          return datePart === dateStr
         })
       })
       

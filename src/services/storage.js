@@ -19,15 +19,12 @@ const formatDateTimeToLocal = (date) => {
   return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 
-// Extract date string from completion record (supports both old string format and new object format)
+// Extract date string from completion record (supports both old string format and new format)
 // Used for date comparison (only cares about YYYY-MM-DD)
 const extractDateFromCompletion = (completion) => {
   if (typeof completion === 'string') {
-    // Old format: "YYYY-MM-DD" or "YYYY-MM-DD HH:mm"
+    // Format: "YYYY-MM-DD" or "YYYY-MM-DD HH:mm"
     return completion.split(' ')[0]
-  } else if (completion && typeof completion === 'object' && completion.dateTime) {
-    // New format: { dateTime: "YYYY-MM-DD HH:mm", timestamp: number }
-    return completion.dateTime.split(' ')[0]
   }
   return null
 }
@@ -208,12 +205,8 @@ export const toggleHabitComplete = async (id, date) => {
     })
     
     if (existingIndex === -1) {
-      // New completion - store with timestamp
-      const completionRecord = {
-        dateTime: formatDateTimeToLocal(date),
-        timestamp: date.getTime()
-      }
-      habit.completedDates.push(completionRecord)
+      // New completion - store as datetime string
+      habit.completedDates.push(formatDateTimeToLocal(date))
     } else {
       // Remove completion
       habit.completedDates.splice(existingIndex, 1)
@@ -225,27 +218,6 @@ export const toggleHabitComplete = async (id, date) => {
     console.error('Toggle habit completion failed:', error)
     return false
   }
-}
-
-// Convert completion record to standard object format
-// For old string data, treat as 00:00
-const normalizeCompletion = (completion) => {
-  if (typeof completion === 'string') {
-    // Old format: "YYYY-MM-DD" or "YYYY-MM-DD HH:mm"
-    const parts = completion.split(' ')
-    const dateStr = parts[0]
-    const timeStr = parts[1] || '00:00' // Default to 00:00 if no time
-    const [year, month, day] = dateStr.split('-').map(Number)
-    const [hours, minutes] = timeStr.split(':').map(Number)
-    const completionDate = new Date(year, month - 1, day, hours, minutes)
-    
-    return {
-      dateTime: `${dateStr} ${timeStr}`,
-      timestamp: completionDate.getTime()
-    }
-  }
-  // Already in object format
-  return completion
 }
 
 // Check if habit is completed on specific date
@@ -481,7 +453,8 @@ export const getHabitsWithReminders = async () => {
   }
 }
 
-// Migrate old completion records to new format
+// Migrate old completion records to consistent format
+// Old records might be just "YYYY-MM-DD", normalize to "YYYY-MM-DD HH:mm"
 export const migrateCompletionRecords = async () => {
   try {
     const habits = await getHabits()
@@ -490,9 +463,17 @@ export const migrateCompletionRecords = async () => {
     habits.forEach(habit => {
       if (habit.completedDates) {
         const newCompletedDates = habit.completedDates.map(completion => {
-          if (typeof completion === 'string' || (completion && !completion.timestamp)) {
-            migrated = true
-            return normalizeCompletion(completion)
+          if (typeof completion === 'string') {
+            // Check if it already has time
+            const parts = completion.split(' ')
+            if (parts.length === 1) {
+              // Only date, add default time 00:00
+              migrated = true
+              return `${parts[0]} 00:00`
+            } else if (parts.length === 2) {
+              // Already has time, keep as is
+              return completion
+            }
           }
           return completion
         })
@@ -505,7 +486,7 @@ export const migrateCompletionRecords = async () => {
     
     if (migrated) {
       await localforage.setItem('habits', habits)
-      console.log('[DEBUG] Migrated completion records to new format')
+      console.log('[DEBUG] Migrated completion records to consistent format')
       return true
     }
     
