@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>强制刷新并初始化</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .container {
+      background: rgba(255,255,255,0.95);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      margin: 10px;
+      transition: transform 0.2s;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      background: #f0f9eb;
+      color: #67c23a;
+      font-weight: bold;
+    }
+    .steps {
+      text-align: left;
+      background: rgba(255,255,255,0.2);
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .steps ol {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .steps li {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 强制刷新并初始化数据</h1>
+    <p>此页面会清空所有数据并跳转到主页面，触发自动初始化</p>
+    
+    <button class="btn" onclick="forceRefresh()">🚀 强制刷新并初始化</button>
+    
+    <div id="result"></div>
+    
+    <div class="steps">
+      <h3>操作步骤：</h3>
+      <ol>
+        <li>点击上面的按钮</li>
+        <li>等待数据清空</li>
+        <li>自动跳转到主页面</li>
+        <li>打开 F12 控制台查看日志</li>
+        <li>应该看到：<code>[InitData] No habits found, initializing basic data...</code></li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    async function forceRefresh() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '⏳ 正在清空数据...';
+      resultDiv.className = 'result';
+      
+      try {
+        // 清空 IndexedDB
+        const request = indexedDB.open('DoneIt');
+        
+        request.onsuccess = () => {
+          const db = request.result;
+          const transaction = db.transaction(['habits'], 'readwrite');
+          const store = transaction.objectStore('habits');
+          const clearRequest = store.clear();
+          
+          clearRequest.onsuccess = () => {
+            resultDiv.innerHTML = '✅ 数据已清空！正在跳转到主页面...';
+            
+            // 等待 500ms 后跳转
+            setTimeout(() => {
+              window.location.href = 'http://localhost:5173/';
+            }, 500);
+          };
+          
+          clearRequest.onerror = () => {
+            resultDiv.innerHTML = '❌ 清空失败：' + clearRequest.error;
+            resultDiv.style.background = '#fef0f0';
+            resultDiv.style.color = '#f56c6c';
+          };
+        };
+        
+        request.onerror = () => {
+          resultDiv.innerHTML = '❌ 打开数据库失败：' + request.error;
+          resultDiv.style.background = '#fef0f0';
+          resultDiv.style.color = '#f56c6c';
+        };
+      } catch (error) {
+        resultDiv.innerHTML = '❌ 错误：' + error.message;
+        resultDiv.style.background = '#fef0f0';
+        resultDiv.style.color = '#f56c6c';
+      }
+    }
+  </script>
+</body>
+</html>

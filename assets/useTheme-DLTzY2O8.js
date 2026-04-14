@@ -1,0 +1,2 @@
+import{ct as e}from"./_plugin-vue_export-helper-4NooZBa-.js";var t=e(!1),a=()=>{const e=()=>{t.value?document.body.classList.add("dark-mode"):document.body.classList.remove("dark-mode"),localStorage.setItem("theme",t.value?"dark":"light")};return{isDarkMode:t,initTheme:()=>{const a=localStorage.getItem("theme");t.value=!!a&&"dark"===a,e()},applyTheme:e,toggleTheme:()=>{t.value=!t.value,e()}}};export{a as t};
+//# sourceMappingURL=useTheme-DLTzY2O8.js.map
