@@ -97,9 +97,7 @@ const calculateWeekly = (habit) => {
   // 获取本周日期范围（从周日开始）
   const today = new Date()
   const currentDay = today.getDay()
-  const weekStart = new Date(today)
-  weekStart.setDate(today.getDate() - currentDay)
-  
+  const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - currentDay)
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6) // 本周周日
 
@@ -108,14 +106,17 @@ const calculateWeekly = (habit) => {
   const checkedDates = new Set()
 
   for (const dateStr of habit.completedDates) {
-    const datePart = dateStr.split(' ')[0]
-    const checkinDate = new Date(datePart)
-    const checkinDateOnly = new Date(checkinDate.getFullYear(), checkinDate.getMonth(), checkinDate.getDate())
+    // 解析日期字符串 "YYYY-MM-DD HH:mm"
+    const [datePart, timePart] = dateStr.split(' ')
+    const [year, month, day] = datePart.split('-').map(Number)
+    
+    // 使用本地时间创建日期对象，避免时区问题
+    const checkinDateOnly = new Date(year, month - 1, day)
     
     // 检查是否在本周范围内
     if (checkinDateOnly >= weekStart && checkinDateOnly <= weekEnd) {
       // 使用 Set 去重，同一天只计算一次
-      const dateKey = checkinDateOnly.toISOString().split('T')[0]
+      const dateKey = datePart
       if (!checkedDates.has(dateKey)) {
         checkedDates.add(dateKey)
         weekly++

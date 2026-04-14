@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useSettings } from '../composables/useSettings.js'
 import { UserFilled, ChatLineRound } from '@element-plus/icons-vue'
 import FeedbackDialog from './FeedbackDialog.vue'
+import { getReminderNotificationSettings, updateReminderNotificationSettings } from '../services/storage'
 
 const props = defineProps({
   visible: {
@@ -18,11 +19,17 @@ const { username, avatar, setUsername, setAvatar } = useSettings()
 const tempUsername = ref('')
 const fileInput = ref(null)
 const showFeedbackDialog = ref(false)
+const reminderEnabled = ref(true)
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     tempUsername.value = username.value
   }
+})
+
+onMounted(async () => {
+  const enabled = await getReminderNotificationSettings()
+  reminderEnabled.value = enabled
 })
 
 const handleClose = () => {
@@ -53,6 +60,12 @@ const handleFileChange = (event) => {
     reader.readAsDataURL(file)
   }
   event.target.value = ''
+}
+
+const handleReminderToggle = async (enabled) => {
+  await updateReminderNotificationSettings(enabled)
+  // 提醒调度器会每分钟自动检查，不需要手动刷新
+  console.log('[Settings] Notification setting updated:', enabled)
 }
 </script>
 
@@ -95,18 +108,26 @@ const handleFileChange = (event) => {
       </div>
     </div>
     
-    <el-divider />
-    
     <!-- Settings Form Section -->
     <div class="settings-section">
       <div class="form-item">
-        <label class="form-label">Username</label>
         <el-input 
           v-model="tempUsername" 
           placeholder="Enter your name" 
           maxlength="10" 
           @keyup.enter="saveUsername"
           clearable
+        />
+      </div>
+      
+      <div class="form-item">
+        <div class="form-label">
+          <span>Notification</span>
+        </div>
+        <el-switch
+          v-model="reminderEnabled"
+          @change="handleReminderToggle"
+          class="reminder-switch"
         />
       </div>
     </div>
@@ -159,6 +180,10 @@ const handleFileChange = (event) => {
   padding: 8px 0;
 }
 
+.no-margin-divider {
+  margin: 0 !important;
+}
+
 .profile-avatar {
   flex-shrink: 0;
   background-color: white;
@@ -199,15 +224,27 @@ const handleFileChange = (event) => {
 }
 
 .form-item {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-item:last-child {
   margin-bottom: 0;
 }
 
 .form-label {
-  display: block;
+  display: flex;
+  align-items: center;
   font-weight: 500;
   font-size: 14px;
-  margin-bottom: 8px;
   color: var(--text-primary);
+  margin: 0;
+}
+
+.reminder-switch {
+  flex-shrink: 0;
 }
 
 /* Action Buttons Section */

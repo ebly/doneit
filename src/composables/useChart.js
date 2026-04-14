@@ -3,7 +3,7 @@ import * as echarts from 'echarts'
 
 export const useChart = (chartDomRef, options = {}) => {
   const chartInstance = ref(null)
-  const { autoInit = true, debounceTime = 100 } = options
+  const { autoInit = true, debounceTime = 100, enableResizeObserver = false } = options
 
   const getChartBackgroundColor = () => {
     if (document.body.classList.contains('dark-mode')) {
@@ -21,6 +21,8 @@ export const useChart = (chartDomRef, options = {}) => {
   }
 
   let themeObserver = null
+  let resizeObserver = null
+  let resizeTimer = null
 
   const initChart = (option) => {
     if (!chartDomRef.value) return
@@ -30,7 +32,17 @@ export const useChart = (chartDomRef, options = {}) => {
       existingChart.dispose()
     }
 
-    chartInstance.value = echarts.init(chartDomRef.value)
+    // 确保容器有正确的尺寸
+    const width = chartDomRef.value.clientWidth
+    const height = chartDomRef.value.clientHeight
+    
+    console.log('initChart - 容器尺寸:', { width, height })
+
+    chartInstance.value = echarts.init(chartDomRef.value, null, {
+      width: width,
+      height: height,
+      devicePixelRatio: window.devicePixelRatio
+    })
     
     const mergedOption = {
       ...option,
@@ -50,64 +62,78 @@ export const useChart = (chartDomRef, options = {}) => {
     }
   }
 
-  const updateChart = (option) => {
-    if (chartInstance.value) {
-      const mergedOption = {
-        ...option,
-        backgroundColor: getChartBackgroundColor()
+  // 监听容器宽度变化
+  const setupResizeObserver = (getOption) => {
+    if (!enableResizeObserver || !chartDomRef.value) return
+
+    let lastWidth = chartDomRef.value.clientWidth
+    let hasInit = false
+
+    resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      const currentWidth = entry.contentRect.width
+
+      // 跳过前两次触发（页面加载时的连续触发）
+      if (!hasInit) {
+        hasInit = true
+        return
       }
-      chartInstance.value.setOption(mergedOption)
-    }
+
+      // 清除之前的定时器
+      if (resizeTimer) {
+        clearTimeout(resizeTimer)
+      }
+
+      // 等待 500ms，尺寸稳定后再重新 init
+      resizeTimer = setTimeout(() => {
+        // 检查尺寸是否真的改变了
+        if (currentWidth !== lastWidth) {
+          lastWidth = currentWidth
+          // 使用最新的 option
+          const option = typeof getOption === 'function' ? getOption() : getOption
+          initChart(option)
+        }
+      }, 500)
+    })
+
+    resizeObserver.observe(chartDomRef.value)
   }
 
-  const resizeChart = () => {
-    if (chartInstance.value) {
-      chartInstance.value.resize()
-    }
-  }
-
-  const disposeChart = () => {
-    if (chartInstance.value) {
-      chartInstance.value.dispose()
-      chartInstance.value = null
-    }
+  // 清理资源
+  const dispose = () => {
     if (themeObserver) {
       themeObserver.disconnect()
       themeObserver = null
     }
-  }
-
-  let resizeTimer = null
-  const handleResize = () => {
-    if (debounceTime > 0) {
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+      resizeObserver = null
+    }
+    if (resizeTimer) {
       clearTimeout(resizeTimer)
-      resizeTimer = setTimeout(resizeChart, debounceTime)
-    } else {
-      resizeChart()
+      resizeTimer = null
+    }
+    if (chartInstance.value) {
+      chartInstance.value.dispose()
+      chartInstance.value = null
     }
   }
 
   onMounted(() => {
-    window.addEventListener('resize', handleResize)
+    if (autoInit && chartDomRef.value) {
+      // 需要在外部的 onMounted 中调用 initChart
+    }
   })
 
   onUnmounted(() => {
-    window.removeEventListener('resize', handleResize)
-    disposeChart()
-  })
-
-  watch(chartDomRef, (newVal) => {
-    if (newVal && autoInit) {
-      resizeChart()
-    }
+    dispose()
   })
 
   return {
     chartInstance,
     initChart,
-    updateChart,
-    resizeChart,
-    disposeChart,
-    refreshChartTheme
+    refreshChartTheme,
+    setupResizeObserver,
+    dispose
   }
 }

@@ -31,7 +31,7 @@ const handleAvatarClick = () => {
     <header class="header">
       <div class="logo">
         <h1>DoneIt</h1>
-        <span class="version">v1.0.2</span>
+        <span class="version">v1.0.3</span>
       </div>
       <div class="header-right">
         <nav class="nav">

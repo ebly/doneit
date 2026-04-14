@@ -4,6 +4,8 @@ import CompletionTrend from './charts/CompletionTrend.vue'
 import CompleteRate from './charts/CompleteRate.vue'
 import MaxStreakDays from './charts/MaxStreakDays.vue'
 import HabitHeatmap from './charts/HabitHeatmap.vue'
+import CompletionRatio from './charts/CompletionRatio.vue'
+import HabitRankings from './charts/HabitRankings.vue'
 
 // Convert date to local date string (YYYY-MM-DD format)
 const formatDateToLocal = (date) => {
@@ -24,6 +26,12 @@ const props = defineProps({
 // Selected habit, default select first
 const selectedHabitId = ref('all') // Default 'all' means all habits
 const dateRange = ref('30') // Default Last 30 Days
+const chartKey = ref(Date.now()) // 用于强制重新渲染图表
+
+// 监听选择变化，更新 key 强制重新渲染
+watch([selectedHabitId, dateRange], () => {
+  chartKey.value = Date.now()
+})
 
 // Listen for habits changes, but don't auto select, default is 'all'
 watch(() => props.habits, (newHabits, oldHabits) => {
@@ -322,26 +330,57 @@ watch(dateRange, () => {
     <div class="chart-card wide">
       <h3 class="chart-title">Completion Trend</h3>
       <CompletionTrend 
-        v-if="(selectedHabit || isAllHabits)" 
+        v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
+        :key="`trend-${chartKey}`"
         :habit="selectedHabit" 
         :habits="props.habits"
         :date-range="dateRange"
         :is-all-habits="isAllHabits"
       />
-      <div v-if="!selectedHabit && !isAllHabits" class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
+      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
     </div>
 
     <!-- Habit Heatmap -->
     <div class="chart-card wide">
       <h3 class="chart-title">Habit Heatmap</h3>
       <HabitHeatmap 
-        v-if="(selectedHabit || isAllHabits)" 
+        v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
+        :key="`heatmap-${chartKey}`" 
         :habit="selectedHabit" 
         :habits="props.habits"
         :date-range="dateRange"
         :is-all-habits="isAllHabits"
       />
-      <div v-if="!selectedHabit && !isAllHabits" class="no-habit-tip">Overall statistics for all habits</div>
+      
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
+      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+    </div>
+
+    <!-- Completion Ratio -->
+    <div class="chart-card">
+      <h3 class="chart-title">Completion Ratio</h3>
+      <CompletionRatio 
+        v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
+        :habit="selectedHabit" 
+        :habits="props.habits"
+        :date-range="dateRange"
+        :is-all-habits="isAllHabits"
+      />
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
+      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+    </div>
+
+    <!-- Habit Rankings -->
+    <div class="chart-card">
+      <h3 class="chart-title">Habit Rankings</h3>
+      <HabitRankings 
+        v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
+        :habits="props.habits"
+        :date-range="dateRange"
+      />
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
+      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
     </div>
 
     <!-- Complete Rate -->
@@ -521,17 +560,6 @@ watch(dateRange, () => {
 
 .dark-mode .no-habit-tip {
   color: var(--text-disabled);
-}
-
-/* 响应式 */
-@media (max-width: 1024px) {
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-card.wide {
-    grid-column: span 1;
-  }
 }
 
 @media (max-width: 768px) {

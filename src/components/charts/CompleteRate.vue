@@ -20,7 +20,7 @@ const props = defineProps({
 })
 
 const chartDom = ref(null)
-const { initChart } = useChart(chartDom)
+const { initChart, chartInstance } = useChart(chartDom)
 
 const chartData = computed(() => {
   if (!props.habit || !props.habit.completedDates) {
@@ -137,7 +137,9 @@ const option = computed(() => ({
 }))
 
 watch(() => props.habit, () => {
-  initChart(option.value)
+  if (chartInstance.value) {
+    chartInstance.value.setOption(option.value)
+  }
 }, { deep: true })
 
 onMounted(async () => {

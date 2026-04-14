@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import localforage from 'localforage'
 
 const deleteOldDatabases = () => {
   indexedDB.deleteDatabase('doneit-db')
@@ -8,34 +7,28 @@ const deleteOldDatabases = () => {
 
 deleteOldDatabases()
 
-const settingsStore = localforage.createInstance({
-  name: 'DoneIt',
-  storeName: 'settings',
-  description: 'Settings for DoneIt application'
-})
-
 const username = ref('')
 const avatar = ref('')
 
-const initSettings = async () => {
-  username.value = await settingsStore.getItem('username') || ''
-  avatar.value = await settingsStore.getItem('avatar') || ''
+const initSettings = () => {
+  username.value = localStorage.getItem('username') || ''
+  avatar.value = localStorage.getItem('avatar') || ''
 }
 
 export const useSettings = () => {
-  const setUsername = async (name) => {
+  const setUsername = (name) => {
     username.value = name
-    await settingsStore.setItem('username', name)
+    localStorage.setItem('username', name)
   }
 
-  const setAvatar = async (data) => {
+  const setAvatar = (data) => {
     avatar.value = data
-    await settingsStore.setItem('avatar', data)
+    localStorage.setItem('avatar', data)
   }
 
-  const clearAvatar = async () => {
+  const clearAvatar = () => {
     avatar.value = ''
-    await settingsStore.setItem('avatar', '')
+    localStorage.setItem('avatar', '')
   }
 
   return {

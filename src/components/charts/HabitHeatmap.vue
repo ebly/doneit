@@ -25,7 +25,7 @@ const props = defineProps({
 })
 
 const chartDom = ref(null)
-const { initChart } = useChart(chartDom)
+const { initChart, setupResizeObserver } = useChart(chartDom, { enableResizeObserver: true })
 
 const formatDateToLocal = (date) => {
   const year = date.getFullYear()
@@ -74,21 +74,21 @@ const option = computed(() => {
       calculable: false,
       inRange: {
         color: isDarkMode.value ? [
-          '#3a3a3a',
-          '#90EE90',
-          '#32CD32',
-          '#228B22',
-          '#006400'
+          '#3a3a3a',  // 0% - 深灰色（未完成）
+          '#2d5a27',  // 25% - 深绿色
+          '#32CD32',  // 50% - 亮绿色
+          '#228B22',  // 75% - 森林绿
+          '#006400'   // 100% - 深绿色
         ] : [
-          '#d0d0d0',
-          '#90EE90',
-          '#32CD32',
-          '#228B22',
-          '#006400'
+          '#e0e0e0',  // 0% - 浅灰色（未完成）
+          '#90EE90',  // 25% - 浅绿色
+          '#32CD32',  // 50% - 亮绿色
+          '#228B22',  // 75% - 森林绿
+          '#006400'   // 100% - 深绿色
         ]
       },
       outOfRange: {
-        color: isDarkMode.value ? '#3a3a3a' : '#d0d0d0'
+        color: isDarkMode.value ? '#3a3a3a' : '#e0e0e0'
       }
     },
     calendar: {
@@ -145,13 +145,10 @@ const option = computed(() => {
   }
 })
 
-watch([() => props.habit, () => props.habits, () => props.dateRange, () => props.isAllHabits, isDarkMode], () => {
-  initChart(option.value)
-}, { deep: true })
-
 onMounted(async () => {
   await nextTick()
   initChart(option.value)
+  setupResizeObserver(() => option.value)
 })
 </script>
 

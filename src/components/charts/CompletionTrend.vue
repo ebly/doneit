@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useChart } from '../../composables/useChart'
 
 const props = defineProps({
@@ -22,7 +22,7 @@ const props = defineProps({
 })
 
 const chartDom = ref(null)
-const { initChart, updateChart, resizeChart } = useChart(chartDom)
+const { initChart, setupResizeObserver } = useChart(chartDom, { enableResizeObserver: true })
 
 const formatDateToLocal = (date) => {
   const year = date.getFullYear()
@@ -161,13 +161,10 @@ const option = computed(() => ({
   ]
 }))
 
-watch([() => props.habit, () => props.habits, () => props.dateRange, () => props.isAllHabits], () => {
-  initChart(option.value)
-}, { deep: true })
-
 onMounted(async () => {
   await nextTick()
   initChart(option.value)
+  setupResizeObserver(() => option.value)
 })
 </script>
 

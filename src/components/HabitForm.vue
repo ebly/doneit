@@ -189,7 +189,14 @@ const handleIconSelect = (icon) => {
     <el-form label-width="90px" class="habit-form" @submit.prevent="submitForm">
       <el-form-item label="Name" required>
         <div class="name-icon-inputs">
-          <el-input v-model="habitName" placeholder="e.g., Morning Exercise, Reading" clearable style="flex: 1;" />
+          <el-input 
+            v-model="habitName" 
+            placeholder="e.g., Morning Exercise, Reading" 
+            clearable 
+            maxlength="20" 
+            show-word-limit
+            style="flex: 1;" 
+          />
           <el-dropdown trigger="click" class="icon-dropdown" @command="handleIconSelect" :hide-on-click="false">
             <span class="icon-trigger" style="font-size: 18px; cursor: pointer; margin-left: 12px;">
               {{ habitIcon }}

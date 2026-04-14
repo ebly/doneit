@@ -3,11 +3,25 @@
  * 负责定期检查和触发习惯提醒
  */
 import { getHabitsWithReminders } from './storage'
-import { getReminderSettings } from './storage'
-import { requestNotificationPermission, showNotification, calculateReminderDelay } from './notification'
+import { ElMessage } from 'element-plus'
 
-// 存储所有定时器ID
+// 存储所有定时器 ID
 let timers = new Map()
+
+// 检查习惯今天是否已打卡
+const isHabitCompletedToday = (habit) => {
+  if (!habit.completedDates || habit.completedDates.length === 0) {
+    return false
+  }
+  
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  
+  return habit.completedDates.some(dateStr => {
+    const datePart = dateStr.split(' ')[0]
+    return datePart === today
+  })
+}
 
 // 检查是否应该发送提醒
 const shouldSendReminder = (habit, reminderTime) => {
@@ -15,120 +29,36 @@ const shouldSendReminder = (habit, reminderTime) => {
   const now = new Date()
   const currentHour = now.getHours()
   const currentMinute = now.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinute
   
   // 解析提醒时间
   const [reminderHour, reminderMinute] = reminderTime.split(':').map(Number)
+  const reminderTimeInMinutes = reminderHour * 60 + reminderMinute
   
-  // 检查是否到了提醒时间
-  return currentHour === reminderHour && currentMinute === reminderMinute
+  // 计算时间差（当前时间 - 提醒时间）
+  const timeDiff = currentTimeInMinutes - reminderTimeInMinutes
+  
+  // 只有在提醒时间之后，且在 60 分钟范围内才提醒
+  // timeDiff >= 0 表示当前时间在提醒时间之后
+  // timeDiff <= 60 表示在提醒后 60 分钟内
+  return timeDiff >= 0 && timeDiff <= 60
 }
 
 // 发送习惯提醒
 const sendHabitReminder = async (habit, reminderTime) => {
   try {
-    // 检查提醒设置
-    const settings = await getReminderSettings()
-    if (!settings.enabled) {
-      return false
-    }
-    
-    // 检查通知权限
-    if (Notification.permission !== 'granted') {
-      // 尝试请求权限
-      const granted = await requestNotificationPermission()
-      if (!granted) {
-        return false
-      }
-    }
-    
-    // 发送通知
-    const notification = showNotification(habit.name, {
-      body: `是时候完成你的习惯: ${habit.description}`,
-      icon: '/favicon.svg',
-      tag: `habit-reminder-${habit.id}`,
-      data: {
-        habitId: habit.id,
-        habitName: habit.name
-      },
-      onClick: () => {
-        // 点击通知时的处理逻辑
-        // 可以在这里添加导航逻辑
-      }
+    // 显示 ElMessage 提示
+    ElMessage({
+      message: `Time to track: ${habit.name}!`,
+      type: 'warning',
+      duration: 5000,
+      showClose: true
     })
     
-    if (notification) {
-      return true
-    } else {
-      return false
-    }
+    return true
   } catch (error) {
+    console.error('Send habit reminder failed:', error)
     return false
-  }
-}
-
-// 为单个习惯设置提醒定时器
-const setupHabitReminders = async (habit) => {
-  if (!habit.reminders || habit.reminders.length === 0) {
-    return
-  }
-  
-  // 清除该习惯现有的所有定时器
-  clearHabitReminders(habit.id)
-  
-  // 为每个提醒时间设置定时器
-  for (const reminderTime of habit.reminders) {
-    const delay = calculateReminderDelay(reminderTime)
-    
-    const timerId = setTimeout(async () => {
-      // 检查是否应该发送提醒
-      if (shouldSendReminder(habit, reminderTime)) {
-        await sendHabitReminder(habit, reminderTime)
-      }
-      
-      // 设置下一次提醒
-      setupHabitReminders(habit)
-    }, delay)
-    
-    // 存储定时器ID
-    const key = `${habit.id}-${reminderTime}`
-    timers.set(key, timerId)
-  }
-}
-
-// 清除单个习惯的所有提醒定时器
-const clearHabitReminders = (habitId) => {
-  for (const [key, timerId] of timers.entries()) {
-    if (key.startsWith(habitId)) {
-      clearTimeout(timerId)
-      timers.delete(key)
-    }
-  }
-}
-
-// 设置所有习惯的提醒
-const setupAllReminders = async () => {
-  try {
-    // 清除所有现有定时器
-    clearAllReminders()
-    
-    // 获取所有带有提醒的习惯
-    const habits = await getHabitsWithReminders()
-    
-    // 检查提醒设置
-    const settings = await getReminderSettings()
-    if (!settings.enabled) {
-      console.log('[REMINDER] 提醒已全局禁用，不设置任何提醒')
-      return
-    }
-    
-    // 为每个习惯设置提醒
-    for (const habit of habits) {
-      await setupHabitReminders(habit)
-    }
-    
-    console.log('[REMINDER] 已设置所有习惯提醒，共', habits.length, '个习惯')
-  } catch (error) {
-    console.error('[REMINDER] 设置提醒时发生错误:', error)
   }
 }
 
@@ -142,49 +72,64 @@ const clearAllReminders = () => {
 
 // 监听习惯变化
 const handleHabitChange = async (habit) => {
-  await setupHabitReminders(habit)
-}
-
-// 监听提醒设置变化
-const handleReminderSettingsChange = async () => {
-  await setupAllReminders()
+  // 现在使用每分钟检查机制，不需要单独设置定时器
+  console.log('[REMINDER] Habit changed:', habit.name)
 }
 
 // 初始化提醒调度
 const initReminderScheduler = async () => {
-  // 尝试请求通知权限
-  await requestNotificationPermission()
+  // 检查 Notification 设置
+  const notificationEnabled = localStorage.getItem('Notification')
+  if (notificationEnabled === 'false') {
+    console.log('[REMINDER] Notification is disabled, not setting up reminders')
+    return
+  }
   
-  // 设置所有提醒
-  await setupAllReminders()
+  console.log('[REMINDER] Reminder scheduler initialized')
   
-  // Check every minute (as a backup mechanism)
-  setInterval(async () => {
-    try {
-      const habits = await getHabitsWithReminders()
-      const settings = await getReminderSettings()
+  // 页面加载时立即执行一次检查
+  checkReminders()
+}
+
+// 检查并发送提醒
+const checkReminders = async () => {
+  try {
+    console.log('[REMINDER] Checking reminders...')
+    
+    // Check if notifications are enabled
+    const notificationEnabled = localStorage.getItem('Notification')
+    if (notificationEnabled === 'false') {
+      console.log('[REMINDER] Notification is disabled')
+      return
+    }
+    
+    const habits = await getHabitsWithReminders()
+    console.log('[REMINDER] Found', habits.length, 'habits with reminders')
+    
+    for (const habit of habits) {
+      // Skip if already completed today
+      if (isHabitCompletedToday(habit)) {
+        console.log('[REMINDER] Skipping', habit.name, '- already completed today')
+        continue
+      }
       
-      if (settings.enabled && Notification.permission === 'granted') {
-        for (const habit of habits) {
-          for (const reminderTime of habit.reminders) {
-            if (shouldSendReminder(habit, reminderTime)) {
-              await sendHabitReminder(habit, reminderTime)
-            }
-          }
+      for (const reminderTime of habit.reminders) {
+        const shouldRemind = shouldSendReminder(habit, reminderTime)
+        console.log('[REMINDER]', habit.name, reminderTime, 'shouldRemind:', shouldRemind)
+        
+        if (shouldRemind) {
+          console.log('[REMINDER] Sending reminder for', habit.name)
+          await sendHabitReminder(habit, reminderTime)
         }
       }
-    } catch (error) {
-      console.error('Error during per-minute check:', error)
     }
-  }, 60000) // Check every minute
+  } catch (error) {
+    console.error('Error during reminder check:', error)
+  }
 }
 
 export {
   initReminderScheduler,
-  setupAllReminders,
   clearAllReminders,
-  handleHabitChange,
-  handleReminderSettingsChange,
-  setupHabitReminders,
-  clearHabitReminders
+  handleHabitChange
 }

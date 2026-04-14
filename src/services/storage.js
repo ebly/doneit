@@ -1,5 +1,5 @@
 import localforage from 'localforage'
-import { handleHabitChange, handleReminderSettingsChange, clearHabitReminders } from './reminderScheduler'
+import { handleHabitChange } from './reminderScheduler'
 
 // Convert date to local date string (YYYY-MM-DD format)
 const formatDateToLocal = (date) => {
@@ -29,67 +29,13 @@ const extractDateFromCompletion = (completion) => {
   return null
 }
 
-// Initialize localforage
+// Initialize localforage for habits
 localforage.config({
   name: 'DoneIt',
   storeName: 'habits',
   description: 'User data for DoneIt habit tracking application',
-  driver: localforage.INDEXEDDB // 强制使用 IndexedDB，避免创建 blob 检测键
+  driver: localforage.INDEXEDDB
 })
-
-// Sample habit data
-const sampleHabits = [
-  {
-    id: '1',
-    name: 'Morning Exercise',
-    description: 'Exercise for 30 minutes every morning at 6 AM',
-    frequency: 'daily',
-    reminders: ['06:00'], // Reminder times array
-    daysPerWeek: ['1', '2', '3', '4', '5'],
-    createdAt: new Date().toISOString(),
-    completedDates: []
-  },
-  {
-    id: '2',
-    name: 'Reading',
-    description: 'Read for 1 hour every day',
-    frequency: 'daily',
-    reminders: ['20:00'],
-    daysPerWeek: ['0', '1', '2', '3', '4', '5', '6'],
-    createdAt: new Date().toISOString(),
-    completedDates: []
-  },
-  {
-    id: '3',
-    name: 'Sleeping',
-    description: 'Sleep early for 8 hours every night',
-    frequency: 'daily',
-    reminders: ['22:00'],
-    daysPerWeek: ['0', '1', '2', '3', '4', '5', '6'],
-    createdAt: new Date().toISOString(),
-    completedDates: []
-  }
-]
-
-// Sample reminder settings
-const sampleReminderSettings = {
-  enabled: true,
-  soundEnabled: true,
-  vibrationEnabled: true
-}
-
-// Initialize database, add sample data if no data exists
-const initDatabase = async () => {
-  try {
-    // Initialize habit data
-    const habits = await localforage.getItem('habits')
-    if (!habits || habits.length === 0) {
-      await localforage.setItem('habits', sampleHabits)
-    }
-  } catch (error) {
-    console.error('Database initialization failed:', error)
-  }
-}
 
 // Get all habits
 export const getHabits = async () => {
@@ -121,7 +67,8 @@ export const addHabit = async (habit) => {
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       completedDates: [],
-      reminders: habit.reminders || [],
+      // 默认提醒时间：早上 9 点
+      reminders: habit.reminders || ['09:00'],
       ...habit
     }
     habits.push(newHabit)
@@ -175,9 +122,6 @@ export const deleteHabit = async (id) => {
     }
     
     await localforage.setItem('habits', filteredHabits)
-    
-    // Notify reminder scheduler that habit has been deleted, clear related timers
-    clearHabitReminders(id)
     
     return true
   } catch (error) {
@@ -241,13 +185,11 @@ export const isHabitCompleted = async (id, date) => {
 export const exportData = async () => {
   try {
     const habits = await localforage.getItem('habits')
-    const reminderSettings = await localforage.getItem('reminderSettings')
     
     const exportData = {
       exportDate: new Date().toISOString(),
       version: '1.0',
-      habits: habits || [],
-      reminderSettings: reminderSettings || {}
+      habits: habits || []
     }
     
     const jsonString = JSON.stringify(exportData, null, 2)
@@ -357,28 +299,34 @@ export const getDataStats = async () => {
   }
 }
 
-// Get reminder settings
-export const getReminderSettings = async () => {
+// Get reminder notification settings
+export const getReminderNotificationSettings = async () => {
   try {
-    const settings = await localforage.getItem('reminderSettings')
-    return settings || sampleReminderSettings
+    const settingsStr = localStorage.getItem('Notification')
+    return settingsStr ? JSON.parse(settingsStr) : true
   } catch (error) {
-    console.error('Get reminder settings failed:', error)
-    return sampleReminderSettings
+    console.error('Get reminder notification settings failed:', error)
+    return true
+  }
+}
+
+// Update reminder notification settings
+export const updateReminderNotificationSettings = async (enabled) => {
+  try {
+    localStorage.setItem('Notification', JSON.stringify(enabled))
+    return enabled
+  } catch (error) {
+    console.error('Update reminder notification settings failed:', error)
+    return null
   }
 }
 
 // Update reminder settings
 export const updateReminderSettings = async (settings) => {
   try {
-    const currentSettings = await getReminderSettings()
-    const newSettings = { ...currentSettings, ...settings }
-    await localforage.setItem('reminderSettings', newSettings)
-    
-    // Notify reminder scheduler that settings have been updated
-    handleReminderSettingsChange()
-    
-    return newSettings
+    // 此函数已废弃，提醒设置直接存储在习惯对象中
+    console.warn('[DEPRECATED] updateReminderSettings is deprecated')
+    return null
   } catch (error) {
     console.error('Update reminder settings failed:', error)
     return null
@@ -529,9 +477,6 @@ export const removeRecordsByDate = async (targetDate) => {
   }
 }
 
-// Initialize database
-initDatabase()
-
 // Expose clear data function to global for debugging
 if (typeof window !== 'undefined') {
   window.clearDoneItData = async () => {
@@ -552,8 +497,8 @@ export default {
   importData,
   clearAllData,
   getDataStats,
-  getReminderSettings,
-  updateReminderSettings,
+  getReminderNotificationSettings,
+  updateReminderNotificationSettings,
   addHabitReminder,
   removeHabitReminder,
   getHabitsWithReminders,
