@@ -37,6 +37,8 @@
 html {
   height: 100%;
   overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 body {
@@ -49,7 +51,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   height: 100%;
-  position: relative;
+  position: fixed;
+  width: 100%;
   touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
 }
@@ -92,14 +95,7 @@ body.dark-mode .main-content {
   background-color: var(--bg-primary);
 }
 
-/* App 组件样式 */
-.app-container {
-  display: flex;
-  margin: 0 auto;
-  height: 100%;
-  height: -webkit-fill-available;
-  background-color: var(--bg-secondary);
-}
+/* App 组件样式 - 高度由 App.vue 中的 calc(var(--vh, 1vh) * 100) 控制 */
 
 /* PC 端布局 */
 .pc-layout {
@@ -133,8 +129,8 @@ body.dark-mode .main-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  height: 100%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ============================================
@@ -146,7 +142,6 @@ body.dark-mode .main-content {
   /* 全局布局调整 */
   body {
     font-size: 14px;
-    overflow: auto;
   }
 
   h1 { font-size: 1.5rem; }
@@ -160,8 +155,6 @@ body.dark-mode .main-content {
 
   .pc-layout {
     box-shadow: none;
-    height: auto;
-    min-height: 100vh;
     width: 100%;
   }
 

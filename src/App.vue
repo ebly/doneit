@@ -39,7 +39,7 @@ onMounted(async () => {
     loadMockDataScript(loadHabits)
   }
 
-  // 动态设置视口高度
+  // 动态设置视口高度 - iOS Safari 兼容
   const setViewportHeight = () => {
     const vh = window.innerHeight * 0.01
     document.documentElement.style.setProperty('--vh', `${vh}px`)
@@ -47,6 +47,9 @@ onMounted(async () => {
 
   setViewportHeight()
   window.addEventListener('resize', setViewportHeight)
+  window.addEventListener('orientationchange', () => {
+    setTimeout(setViewportHeight, 100)
+  })
 })
 </script>
 
@@ -95,12 +98,15 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-bottom: env(safe-area-inset-bottom);
   padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .pc-layout {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -108,6 +114,7 @@ onMounted(async () => {
 
 .main-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
