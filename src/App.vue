@@ -83,6 +83,8 @@ onMounted(async () => {
 .app-container {
   background-color: var(--bg-primary);
   height: 100vh;
+  height: -webkit-fill-available;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
