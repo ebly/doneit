@@ -1,13 +1,6 @@
 import localforage from 'localforage'
 import { handleHabitChange } from './reminderScheduler'
-
-// Convert date to local date string (YYYY-MM-DD format)
-const formatDateToLocal = (date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+import { formatDateToLocal, extractDateFromCompletion } from '../utils/date.js'
 
 // Convert date to local datetime string (YYYY-MM-DD HH:mm format)
 const formatDateTimeToLocal = (date) => {
@@ -17,16 +10,6 @@ const formatDateTimeToLocal = (date) => {
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
   return `${year}-${month}-${day} ${hours}:${minutes}`
-}
-
-// Extract date string from completion record (supports both old string format and new format)
-// Used for date comparison (only cares about YYYY-MM-DD)
-const extractDateFromCompletion = (completion) => {
-  if (typeof completion === 'string') {
-    // Format: "YYYY-MM-DD" or "YYYY-MM-DD HH:mm"
-    return completion.split(' ')[0]
-  }
-  return null
 }
 
 // Initialize localforage for habits
@@ -208,7 +191,6 @@ export const exportData = async () => {
         const writable = await handle.createWritable()
         await writable.write(blob)
         await writable.close()
-        console.log('[DEBUG] Data exported to:', handle.name)
         return true
       } catch (err) {
         // User cancelled or API not supported, fallback to traditional download
@@ -242,8 +224,13 @@ export const importData = async (file) => {
         try {
           const importedData = JSON.parse(e.target.result)
           
-          // Validate data format
-          if (Array.isArray(importedData)) {
+          // Validate data format - support both old array format and new object format
+          if (importedData && typeof importedData === 'object' && !Array.isArray(importedData) && importedData.habits) {
+            // New format: { exportDate, version, habits: [...] }
+            await localforage.setItem('habits', importedData.habits)
+            resolve(true)
+          } else if (Array.isArray(importedData)) {
+            // Old format: [...habits]
             await localforage.setItem('habits', importedData)
             resolve(true)
           } else {
@@ -434,7 +421,6 @@ export const migrateCompletionRecords = async () => {
     
     if (migrated) {
       await localforage.setItem('habits', habits)
-      console.log('[DEBUG] Migrated completion records to consistent format')
       return true
     }
     
@@ -466,7 +452,6 @@ export const removeRecordsByDate = async (targetDate) => {
     
     if (modified) {
       await localforage.setItem('habits', habits)
-      console.log(`[DEBUG] Removed records for date: ${targetDate}`)
       return true
     }
     
@@ -477,13 +462,7 @@ export const removeRecordsByDate = async (targetDate) => {
   }
 }
 
-// Expose clear data function to global for debugging
-if (typeof window !== 'undefined') {
-  window.clearDoneItData = async () => {
-    await clearAllData()
-    location.reload()
-  }
-}
+
 
 export default {
   getHabits,

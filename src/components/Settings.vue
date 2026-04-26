@@ -4,6 +4,12 @@ import { useSettings } from '../composables/useSettings.js'
 import { UserFilled, ChatLineRound } from '@element-plus/icons-vue'
 import FeedbackDialog from './FeedbackDialog.vue'
 import { getReminderNotificationSettings, updateReminderNotificationSettings } from '../services/storage'
+import { useI18n, registerLocale } from '../utils/i18n.js'
+import en from '../locales/en.js'
+import zh from '../locales/zh.js'
+
+registerLocale('en', en)
+registerLocale('zh', zh)
 
 const props = defineProps({
   visible: {
@@ -15,6 +21,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible'])
 
 const { username, avatar, setUsername, setAvatar } = useSettings()
+const { t } = useI18n()
 
 const tempUsername = ref('')
 const fileInput = ref(null)
@@ -39,7 +46,7 @@ const handleClose = () => {
 const saveUsername = () => {
   const trimmed = tempUsername.value.trim()
   if (trimmed.length > 10) {
-    alert('Username cannot exceed 10 characters')
+    alert(t.value('settings.usernameExceed'))
     return
   }
   setUsername(trimmed)
@@ -64,8 +71,6 @@ const handleFileChange = (event) => {
 
 const handleReminderToggle = async (enabled) => {
   await updateReminderNotificationSettings(enabled)
-  // 提醒调度器会每分钟自动检查，不需要手动刷新
-  console.log('[Settings] Notification setting updated:', enabled)
 }
 </script>
 
@@ -73,14 +78,13 @@ const handleReminderToggle = async (enabled) => {
   <el-dialog
     :model-value="visible"
     @update:model-value="emit('update:visible', $event)"
-    title="Settings"
-    width="380px"
+    :title="t('settings.title')"
     :close-on-click-modal="true"
     :close-on-press-escape="true"
     :show-close="true"
     :modal="false"
     class="settings-dialog"
-    style="position: fixed; top: 70px; right: 20px; margin: 0;"
+
   >
     <!-- Profile Section -->
     <div class="profile-section">
@@ -101,10 +105,10 @@ const handleReminderToggle = async (enabled) => {
       />
       <div class="profile-info">
         <div class="welcome-text">
-          <span style="color: gray;">Welcome</span> 
-          <span class="username">{{ username || 'Stranger' }}</span>
+          <span style="color: gray;">{{ t('settings.welcome') }}</span> 
+          <span class="username">{{ username || t('settings.stranger') }}</span>
         </div>
-        <div class="edit-hint">Click avatar to change</div>
+        <div class="edit-hint">{{ t('settings.clickAvatar') }}</div>
       </div>
     </div>
     
@@ -113,7 +117,7 @@ const handleReminderToggle = async (enabled) => {
       <div class="form-item">
         <el-input 
           v-model="tempUsername" 
-          placeholder="Enter your name" 
+          :placeholder="t('settings.enterName')" 
           maxlength="10" 
           @keyup.enter="saveUsername"
           clearable
@@ -122,7 +126,7 @@ const handleReminderToggle = async (enabled) => {
       
       <div class="form-item">
         <div class="form-label">
-          <span>Notification</span>
+          <span>{{ t('settings.notification') }}</span>
         </div>
         <el-switch
           v-model="reminderEnabled"
@@ -140,7 +144,7 @@ const handleReminderToggle = async (enabled) => {
         :icon="ChatLineRound" 
         class="feedback-button"
       >
-        Feedback
+        {{ t('settings.feedback') }}
       </el-button>
       
       <el-button 
@@ -148,7 +152,7 @@ const handleReminderToggle = async (enabled) => {
         @click="saveUsername" 
         class="save-button"
       >
-        Save Changes
+        {{ t('common.saveChanges') }}
       </el-button>
     </div>
 
@@ -158,6 +162,19 @@ const handleReminderToggle = async (enabled) => {
 </template>
 
 <style scoped>
+.settings-dialog {
+  position: fixed !important;
+  top: 65px !important;
+  right: 24px !important;
+  margin: 0 !important;
+  max-width: calc(100vw - 48px) !important;
+  width: 280px !important;
+}
+
+.settings-dialog :deep(.el-dialog) {
+  width: 280px !important;
+}
+
 .settings-dialog :deep(.el-dialog__footer) {
   padding-top: 0;
   border-top: none;
@@ -261,5 +278,41 @@ const handleReminderToggle = async (enabled) => {
 
 .save-button {
   width: 100%;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .settings-dialog {
+    right: 5% !important;
+    left: 5% !important;
+    top: 60px !important;
+    max-width: none !important;
+    width: 90% !important;
+  }
+
+  .profile-section {
+    gap: 12px;
+  }
+
+  .profile-avatar {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .welcome-text {
+    font-size: 13px;
+  }
+
+  .edit-hint {
+    font-size: 11px;
+  }
+
+  .form-item {
+    margin-bottom: 12px;
+  }
+
+  .form-label {
+    font-size: 13px;
+  }
 }
 </style>

@@ -2,6 +2,13 @@
 import { ref, watch } from 'vue'
 import { Close, Delete, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useI18n, registerLocale } from '../utils/i18n.js'
+import { useSettings } from '../composables/useSettings.js'
+import en from '../locales/en.js'
+import zh from '../locales/zh.js'
+
+registerLocale('en', en)
+registerLocale('zh', zh)
 
 const props = defineProps({
   habit: {
@@ -16,15 +23,21 @@ const props = defineProps({
 
 const emit = defineEmits(['add', 'cancel', 'update:visible'])
 
-const habitName = ref(props.habit?.name || '')
-const description = ref(props.habit?.description || '')
-const selectedDays = ref(props.habit?.daysPerWeek || ['0', '1', '2', '3', '4', '5', '6'])
-const reminders = ref(props.habit?.reminders && props.habit?.reminders.length > 0 ? [props.habit.reminders[0]] : ['00:00'])
+const { language } = useSettings()
+const { t, currentLang } = useI18n()
+
+watch(() => language.value, (newVal) => {
+  currentLang.value = newVal
+}, { immediate: true })
+
+const habitName = ref('')
+const description = ref('')
+const selectedDays = ref(['0', '1', '2', '3', '4', '5', '6'])
+const reminders = ref([])
 const reminderHour = ref('00')
 const reminderMinute = ref('00')
-const habitIcon = ref(props.habit?.icon || '📝')
+const habitIcon = ref('📝')
 
-// 常用习惯图标选项
 const iconOptions = [
   { value: '🏃‍♂️', label: '跑步' },
   { value: '📚', label: '阅读' },
@@ -44,7 +57,6 @@ const iconOptions = [
   { value: '📝', label: '默认' }
 ]
 
-// Generate hour shortcuts
 const hourShortcuts = [
   { text: '00', value: '00' },
   { text: '06', value: '06' },
@@ -53,7 +65,6 @@ const hourShortcuts = [
   { text: '23', value: '23' }
 ]
 
-// Parse hour and minute from time string
 const parseTime = (timeStr) => {
   if (!timeStr) {
     reminderHour.value = ''
@@ -65,7 +76,6 @@ const parseTime = (timeStr) => {
   reminderMinute.value = minute
 }
 
-// Combine hour and minute into time string
 const combineTime = () => {
   if (!reminderHour.value && !reminderMinute.value) {
     return ''
@@ -75,57 +85,57 @@ const combineTime = () => {
   return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
 }
 
-// 监听 habit 变化，更新表单数据
 watch(() => props.habit, (newHabit) => {
   if (newHabit) {
     habitName.value = newHabit.name || ''
     description.value = newHabit.description || ''
     selectedDays.value = newHabit.daysPerWeek || ['0', '1', '2', '3', '4', '5', '6']
-    // 只取第一个提醒时间，如果没有则为空数组
-    reminders.value = newHabit.reminders && newHabit.reminders.length > 0 ? [newHabit.reminders[0]] : []
-    parseTime(reminders.value[0])
+    if (newHabit.reminders && newHabit.reminders.length > 0) {
+      reminders.value = [newHabit.reminders[0]]
+      parseTime(newHabit.reminders[0])
+    } else {
+      reminders.value = []
+      reminderHour.value = '00'
+      reminderMinute.value = '00'
+    }
     habitIcon.value = newHabit.icon || '📝'
   } else {
     habitName.value = ''
     description.value = ''
     selectedDays.value = ['0', '1', '2', '3', '4', '5', '6']
-    reminders.value = ['00:00']
-    parseTime('00:00')
+    reminders.value = []
+    reminderHour.value = '00'
+    reminderMinute.value = '00'
     habitIcon.value = '📝'
   }
 }, { immediate: true })
 
 const submitForm = () => {
-  // 验证 Name 不能为空
   if (!habitName.value.trim()) {
     ElMessage({
-      message: 'Please enter a habit name',
+      message: t.value('habitForm.enterHabitName'),
       type: 'warning',
     })
     return
   }
 
-  // Validate Reminders cannot be empty (need to select both Hour and Min)
   if (!reminderHour.value || !reminderMinute.value) {
     ElMessage({
-      message: 'Please select a reminder time',
+      message: t.value('habitForm.selectReminder'),
       type: 'warning',
     })
     return
   }
 
-  // 验证 Days/Week 至少选择一天
   if (!selectedDays.value || selectedDays.value.length === 0) {
     ElMessage({
-      message: 'Please select at least one day',
+      message: t.value('habitForm.selectDay'),
       type: 'warning',
     })
     return
   }
 
-  // Combine hour and minute into full time
   const combinedTime = combineTime()
-  // 00:00 是有效时间（深夜 12 点）
   const validReminders = combinedTime ? [combinedTime] : []
 
   const habitData = {
@@ -140,7 +150,6 @@ const submitForm = () => {
   emit('add', habitData)
   emit('update:visible', false)
   
-  // 清空所有字段，恢复初始状态
   habitName.value = ''
   description.value = ''
   selectedDays.value = ['0', '1', '2', '3', '4', '5', '6']
@@ -154,7 +163,6 @@ const handleCancel = () => {
   emit('cancel')
   emit('update:visible', false)
   
-  // 清空所有字段，恢复初始状态
   habitName.value = ''
   description.value = ''
   selectedDays.value = ['0', '1', '2', '3', '4', '5', '6']
@@ -164,19 +172,15 @@ const handleCancel = () => {
   habitIcon.value = '📝'
 }
 
-// 切换星期几的选择状态
 const toggleDaySelection = (dayIndex) => {
   const index = selectedDays.value.indexOf(dayIndex)
   if (index > -1) {
-    // 如果已经选中，则取消选中
     selectedDays.value.splice(index, 1)
   } else {
-    // 如果未选中，则添加选中
     selectedDays.value.push(dayIndex)
   }
 }
 
-// 处理图标选择
 const handleIconSelect = (icon) => {
   habitIcon.value = icon
 }
@@ -184,14 +188,14 @@ const handleIconSelect = (icon) => {
 
 <template>
   <el-dialog :model-value="visible" @update:model-value="(value) => emit('update:visible', value)"
-    :title="habit ? 'Edit Habit' : 'Add Habit'" width="500px" :close-on-click-modal="false" class="habit-form-dialog"
+    :title="habit ? t('habitForm.editTitle') : t('habitForm.addTitle')" width="500px" :close-on-click-modal="false" class="habit-form-dialog"
     @close="handleCancel">
     <el-form label-width="90px" class="habit-form" @submit.prevent="submitForm">
-      <el-form-item label="Name" required>
+      <el-form-item :label="t('habitForm.name')" required>
         <div class="name-icon-inputs">
           <el-input 
             v-model="habitName" 
-            placeholder="e.g., Morning Exercise, Reading" 
+            :placeholder="t('habitForm.namePlaceholder')" 
             clearable 
             maxlength="20" 
             show-word-limit
@@ -217,13 +221,13 @@ const handleIconSelect = (icon) => {
         </div>
       </el-form-item>
 
-      <el-form-item label="Description">
-        <el-input v-model="description" placeholder="e.g., Exercise for 30 minutes every morning at 6 AM" type="textarea" :rows="3" />
+      <el-form-item :label="t('habitForm.description')">
+        <el-input v-model="description" :placeholder="t('habitForm.descriptionPlaceholder')" type="textarea" :rows="3" />
       </el-form-item>
 
-      <el-form-item label="Days/Week" required>
+      <el-form-item :label="t('habitForm.daysPerWeek')" required>
         <div class="days-tags-selector">
-          <el-tag v-for="(day, index) in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="index"
+          <el-tag v-for="(day, index) in t('days')" :key="index"
             :type="selectedDays.includes(index.toString()) ? 'primary' : 'info'"
             :class="{ 'selected': selectedDays.includes(index.toString()) }"
             @click="toggleDaySelection(index.toString())" size="small"
@@ -233,13 +237,13 @@ const handleIconSelect = (icon) => {
         </div>
       </el-form-item>
 
-      <el-form-item label="Reminders" required>
+      <el-form-item :label="t('habitForm.reminders')" required>
         <div class="reminder-time-inputs">
-          <el-select v-model="reminderHour" placeholder="Hour" style="width: 100px;" clearable filterable>
+          <el-select v-model="reminderHour" :placeholder="t('habitForm.hour')" style="width: 100px;" clearable filterable>
             <el-option v-for="h in 24" :key="h - 1" :label="String(h - 1).padStart(2, '0')" :value="String(h - 1).padStart(2, '0')" />
           </el-select>
           <span class="time-separator">:</span>
-          <el-select v-model="reminderMinute" placeholder="Min" style="width: 100px;" clearable filterable>
+          <el-select v-model="reminderMinute" :placeholder="t('habitForm.min')" style="width: 100px;" clearable filterable>
             <el-option v-for="m in 60" :key="m - 1" :label="String(m - 1).padStart(2, '0')" :value="String(m - 1).padStart(2, '0')" />
           </el-select>
         </div>
@@ -248,9 +252,9 @@ const handleIconSelect = (icon) => {
       <el-form-item :label-width="0">
         <div class="form-actions">
           <el-button type="default" @click="handleCancel"
-            style="width: 160px; padding: 6px; font-size: 14px;">Cancel</el-button>
+            style="width: 160px; padding: 6px; font-size: 14px;">{{ t('common.cancel') }}</el-button>
           <el-button native-type="submit" class="site-primary-button"
-            style="width: 160px; padding: 6px; font-size: 14px;">Save</el-button>
+            style="width: 160px; padding: 6px; font-size: 14px;">{{ t('common.save') }}</el-button>
         </div>
       </el-form-item>
     </el-form>
@@ -367,5 +371,69 @@ const handleIconSelect = (icon) => {
 /* el-dialog 暗色模式 */
 .dark-mode :deep(.el-dialog) {
   background-color: var(--bg-secondary);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  :deep(.el-dialog) {
+    width: 90% !important;
+    margin: 0 auto !important;
+  }
+
+  :deep(.el-form-item__label) {
+    font-size: 13px;
+  }
+
+  .days-tags-selector {
+    gap: 6px;
+  }
+
+  .days-tags-selector .el-tag {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+
+  .reminder-time-inputs {
+    gap: 6px;
+  }
+
+  .reminder-time-inputs .el-select {
+    width: 80px !important;
+  }
+
+  .time-separator {
+    font-size: 14px;
+  }
+
+  .name-icon-inputs {
+    gap: 8px;
+  }
+
+  .icon-trigger {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .icon-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    max-width: 180px;
+  }
+
+  .icon-item {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-actions .el-button {
+    width: 100% !important;
+  }
 }
 </style>

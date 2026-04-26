@@ -1,9 +1,16 @@
 <script setup>
-import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { ref, onMounted, defineAsyncComponent, watch } from 'vue'
 import { useTheme } from './composables/useTheme.js'
 import { useHabits } from './composables/useHabits.js'
 import { loadMockDataScript } from './composables/useMockData.js'
 import { Search } from '@element-plus/icons-vue'
+import { useI18n, registerLocale } from './utils/i18n.js'
+import { useSettings } from './composables/useSettings.js'
+import en from './locales/en.js'
+import zh from './locales/zh.js'
+
+registerLocale('en', en)
+registerLocale('zh', zh)
 
 const HabitList = defineAsyncComponent(() => import('./components/HabitList.vue'))
 const HabitForm = defineAsyncComponent(() => import('./components/HabitForm.vue'))
@@ -14,9 +21,15 @@ const TopNav = defineAsyncComponent(() => import('./components/TopNav.vue'))
 
 const { initTheme } = useTheme()
 const { habits, showAddForm, editingHabit, loadHabits, handleAddHabit, startEditHabit, cancelEditHabit, handleDeleteHabit } = useHabits()
+const { language } = useSettings()
+const { t, currentLang } = useI18n()
 
 const searchValue = ref('')
 const currentView = ref('dashboard')
+
+watch(() => language.value, (newVal) => {
+  currentLang.value = newVal
+}, { immediate: true })
 
 onMounted(async () => {
   initTheme()
@@ -41,7 +54,7 @@ onMounted(async () => {
             <div class="search-button-container">
               <el-input
                 v-model="searchValue"
-                placeholder="Search habits..."
+                :placeholder="t('common.search')"
                 class="search-bar"
                 clearable
               >
@@ -49,7 +62,7 @@ onMounted(async () => {
                   <el-icon><Search /></el-icon>
                 </template>
               </el-input>
-              <button class="add-btn" @click="showAddForm = true">+ Add Habit</button>
+              <button class="add-btn" @click="showAddForm = true">{{ t('common.addHabit') }}</button>
             </div>
           </div>
 
@@ -69,7 +82,23 @@ onMounted(async () => {
 <style scoped>
 .app-container {
   background-color: var(--bg-primary);
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pc-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dark-mode .app-container {

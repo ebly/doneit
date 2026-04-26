@@ -1,18 +1,13 @@
 import { ref } from 'vue'
 
-const deleteOldDatabases = () => {
-  indexedDB.deleteDatabase('doneit-db')
-  indexedDB.deleteDatabase('local-forage-detect-blob-support')
-}
-
-deleteOldDatabases()
-
 const username = ref('')
 const avatar = ref('')
+const language = ref(localStorage.getItem('language') || 'en')
 
 const initSettings = () => {
   username.value = localStorage.getItem('username') || ''
   avatar.value = localStorage.getItem('avatar') || ''
+  language.value = localStorage.getItem('language') || 'en'
 }
 
 export const useSettings = () => {
@@ -26,6 +21,11 @@ export const useSettings = () => {
     localStorage.setItem('avatar', data)
   }
 
+  const setLanguage = (lang) => {
+    language.value = lang
+    localStorage.setItem('language', lang)
+  }
+
   const clearAvatar = () => {
     avatar.value = ''
     localStorage.setItem('avatar', '')
@@ -34,8 +34,10 @@ export const useSettings = () => {
   return {
     username,
     avatar,
+    language,
     setUsername,
     setAvatar,
+    setLanguage,
     clearAvatar,
     initSettings
   }

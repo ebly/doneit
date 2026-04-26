@@ -73,7 +73,6 @@ const clearAllReminders = () => {
 // 监听习惯变化
 const handleHabitChange = async (habit) => {
   // 现在使用每分钟检查机制，不需要单独设置定时器
-  console.log('[REMINDER] Habit changed:', habit.name)
 }
 
 // 初始化提醒调度
@@ -81,44 +80,39 @@ const initReminderScheduler = async () => {
   // 检查 Notification 设置
   const notificationEnabled = localStorage.getItem('Notification')
   if (notificationEnabled === 'false') {
-    console.log('[REMINDER] Notification is disabled, not setting up reminders')
     return
   }
   
-  console.log('[REMINDER] Reminder scheduler initialized')
-  
   // 页面加载时立即执行一次检查
   checkReminders()
+  
+  // 每分钟检查一次提醒
+  setInterval(() => {
+    checkReminders()
+  }, 60 * 1000)
 }
 
 // 检查并发送提醒
 const checkReminders = async () => {
   try {
-    console.log('[REMINDER] Checking reminders...')
-    
     // Check if notifications are enabled
     const notificationEnabled = localStorage.getItem('Notification')
     if (notificationEnabled === 'false') {
-      console.log('[REMINDER] Notification is disabled')
       return
     }
     
     const habits = await getHabitsWithReminders()
-    console.log('[REMINDER] Found', habits.length, 'habits with reminders')
     
     for (const habit of habits) {
       // Skip if already completed today
       if (isHabitCompletedToday(habit)) {
-        console.log('[REMINDER] Skipping', habit.name, '- already completed today')
         continue
       }
       
       for (const reminderTime of habit.reminders) {
         const shouldRemind = shouldSendReminder(habit, reminderTime)
-        console.log('[REMINDER]', habit.name, reminderTime, 'shouldRemind:', shouldRemind)
         
         if (shouldRemind) {
-          console.log('[REMINDER] Sending reminder for', habit.name)
           await sendHabitReminder(habit, reminderTime)
         }
       }

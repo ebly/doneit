@@ -6,8 +6,14 @@ import MaxStreakDays from './charts/MaxStreakDays.vue'
 import HabitHeatmap from './charts/HabitHeatmap.vue'
 import CompletionRatio from './charts/CompletionRatio.vue'
 import HabitRankings from './charts/HabitRankings.vue'
+import { useI18n, registerLocale } from '../utils/i18n.js'
+import { useSettings } from '../composables/useSettings.js'
+import en from '../locales/en.js'
+import zh from '../locales/zh.js'
 
-// Convert date to local date string (YYYY-MM-DD format)
+registerLocale('en', en)
+registerLocale('zh', zh)
+
 const formatDateToLocal = (date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -15,7 +21,6 @@ const formatDateToLocal = (date) => {
   return `${year}-${month}-${day}`
 }
 
-// Receive habit data as props
 const props = defineProps({
   habits: {
     type: Array,
@@ -23,22 +28,24 @@ const props = defineProps({
   }
 })
 
-// Selected habit, default select first
-const selectedHabitId = ref('all') // Default 'all' means all habits
-const dateRange = ref('30') // Default Last 30 Days
-const chartKey = ref(Date.now()) // 用于强制重新渲染图表
+const { language } = useSettings()
+const { t, currentLang } = useI18n()
 
-// 监听选择变化，更新 key 强制重新渲染
+watch(() => language.value, (newVal) => {
+  currentLang.value = newVal
+}, { immediate: true })
+
+const selectedHabitId = ref('all')
+const dateRange = ref('30')
+const chartKey = ref(Date.now())
+
 watch([selectedHabitId, dateRange], () => {
   chartKey.value = Date.now()
 })
 
-// Listen for habits changes, but don't auto select, default is 'all'
 watch(() => props.habits, (newHabits, oldHabits) => {
-  // Keep default value 'all'
 }, { immediate: true, deep: true })
 
-// Calculate overall statistics
 const stats = computed(() => {
   if (!props.habits || props.habits.length === 0) {
     return {
@@ -48,14 +55,12 @@ const stats = computed(() => {
     }
   }
 
-  // Calculate based on selected habit
   const habitsToCalculate = selectedHabitId.value && selectedHabitId.value !== 'all'
     ? props.habits.filter(h => h.id === selectedHabitId.value)
     : props.habits
 
   const isAllHabits = selectedHabitId.value === 'all' || !selectedHabitId.value
 
-  // Calculate date range
   const today = new Date()
   const daysToSubtract = parseInt(dateRange.value) || 30
   const startDate = new Date(today)
@@ -65,20 +70,16 @@ const stats = computed(() => {
   let maxStreak = 0
   
   if (isAllHabits && props.habits.length > 0) {
-    // All Habits mode: count days when all habits are completed
     const allDates = new Set()
     
-    // Collect all dates
     props.habits.forEach(habit => {
       if (!habit.completedDates) return
       
       habit.completedDates.forEach(dateStr => {
         const datePart = dateStr.split(' ')[0]
-        // Parse date as local time to avoid timezone issues
         const [year, month, day] = datePart.split('-').map(Number)
         const checkinDate = new Date(year, month - 1, day)
         
-        // Compare dates at midnight local time
         const startDateMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
         const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
         
@@ -88,7 +89,6 @@ const stats = computed(() => {
       })
     })
 
-    // Check each day if all habits are completed
     let completedDays = []
     allDates.forEach(dateStr => {
       const allCompleted = props.habits.every(habit => {
@@ -106,8 +106,6 @@ const stats = computed(() => {
 
     totalCheckins = completedDays.length
 
-    // 计算连续天数（所有习惯都完成的天数）
-    // 需要考虑某天没有习惯需要打卡的情况
     if (completedDays.length > 0) {
       const sortedDays = [...completedDays].sort((a, b) => {
         return new Date(b) - new Date(a)
@@ -121,18 +119,16 @@ const stats = computed(() => {
       const isYesterday = lastDay.toDateString() === yesterday.toDateString()
 
       if (!isToday && !isYesterday) {
-        // 检查昨天是否所有习惯都不需要打卡
         const yesterdayStr = formatDateToLocal(yesterday)
         const hasHabitsYesterday = props.habits.some(habit => {
           if (!habit.daysPerWeek || habit.daysPerWeek.length === 0) {
-            return true // 没有配置，默认每天都需要
+            return true
           }
           const dayOfWeek = yesterday.getDay().toString()
           return habit.daysPerWeek.includes(dayOfWeek)
         })
         
         if (!hasHabitsYesterday) {
-          // 昨天没有习惯需要打卡，继续检查前天
           const dayBeforeYesterday = new Date(yesterday)
           dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1)
           const isDayBeforeYesterdayInCompleted = completedDays.some(d => {
@@ -153,27 +149,23 @@ const stats = computed(() => {
         const diffDays = Math.round((currentDate - prevDate) / (1000 * 60 * 60 * 24))
 
         if (diffDays === 1) {
-          // 连续的天数
           streak++
         } else if (diffDays > 1) {
-          // 中间有间隔，检查间隔的天是否所有习惯都不需要打卡
           let hasSkippedDays = true
           for (let j = 1; j < diffDays; j++) {
             const skipDate = new Date(prevDate)
             skipDate.setDate(skipDate.getDate() + j)
             const skipDateStr = formatDateToLocal(skipDate)
             
-            // 检查这天是否有习惯需要打卡
             const hasHabitsOnSkipDay = props.habits.some(habit => {
               if (!habit.daysPerWeek || habit.daysPerWeek.length === 0) {
-                return true // 没有配置，默认每天都需要
+                return true
               }
               const dayOfWeek = skipDate.getDay().toString()
               return habit.daysPerWeek.includes(dayOfWeek)
             })
             
             if (hasHabitsOnSkipDay) {
-              // 这天有习惯需要打卡，但没有完成，streak 断了
               hasSkippedDays = false
               break
             }
@@ -192,17 +184,14 @@ const stats = computed(() => {
       maxStreak = streak
     }
   } else {
-    // Single habit mode
     habitsToCalculate.forEach(habit => {
       if (!habit.completedDates) return
 
-      // Filter check-in records within date range
       const filteredDates = habit.completedDates.filter(dateStr => {
         const datePart = dateStr.split(' ')[0]
         const [year, month, day] = datePart.split('-').map(Number)
         const checkinDate = new Date(year, month - 1, day)
         
-        // Compare dates at midnight local time
         const startDateMidnight = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
         const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate())
         
@@ -211,29 +200,53 @@ const stats = computed(() => {
 
       totalCheckins += filteredDates.length
 
-      // 计算连续打卡天数
       if (filteredDates.length > 0) {
         const sortedDates = [...filteredDates].sort((a, b) => {
           return new Date(b.split(' ')[0]) - new Date(a.split(' ')[0])
         })
 
         let streak = 1
-        const lastCheckin = new Date(sortedDates[0].split(' ')[0])
-        const isToday = lastCheckin.toDateString() === today.toDateString()
+        const lastCheckinDate = new Date(sortedDates[0].split(' ')[0])
+        const isTodayChecked = lastCheckinDate.toDateString() === today.toDateString()
         const yesterday = new Date(today)
         yesterday.setDate(yesterday.getDate() - 1)
-        const isYesterday = lastCheckin.toDateString() === yesterday.toDateString()
+        const isYesterdayChecked = lastCheckinDate.toDateString() === yesterday.toDateString()
 
-        if (!isToday && !isYesterday) {
-          streak = 0
+        if (!isTodayChecked && !isYesterdayChecked) {
+          const todayDayIndex = today.getDay().toString()
+          const isTodayRequired = !habit.daysPerWeek || habit.daysPerWeek.length === 0 || habit.daysPerWeek.includes(todayDayIndex)
+          
+          if (isTodayRequired) {
+            const yesterdayDayIndex = yesterday.getDay().toString()
+            const isYesterdayRequired = !habit.daysPerWeek || habit.daysPerWeek.length === 0 || habit.daysPerWeek.includes(yesterdayDayIndex)
+            if (isYesterdayRequired) {
+              streak = 0
+            }
+          }
         }
 
         for (let i = 1; i < sortedDates.length; i++) {
           const currentDate = new Date(sortedDates[i - 1].split(' ')[0])
           const prevDate = new Date(sortedDates[i].split(' ')[0])
-          const diffDays = (currentDate - prevDate) / (1000 * 60 * 60 * 24)
+          const diffDays = Math.round((currentDate - prevDate) / (1000 * 60 * 60 * 24))
 
           if (diffDays === 1) {
+            streak++
+          } else if (diffDays > 1) {
+            let hasSkippedRequiredDays = false
+            for (let j = 1; j < diffDays; j++) {
+              const skipDate = new Date(prevDate)
+              skipDate.setDate(skipDate.getDate() + j)
+              const skipDayIndex = skipDate.getDay().toString()
+              const isSkipRequired = !habit.daysPerWeek || habit.daysPerWeek.length === 0 || habit.daysPerWeek.includes(skipDayIndex)
+              if (isSkipRequired) {
+                hasSkippedRequiredDays = true
+                break
+              }
+            }
+            if (hasSkippedRequiredDays) {
+              break
+            }
             streak++
           } else {
             break
@@ -245,7 +258,6 @@ const stats = computed(() => {
     })
   }
 
-  // 计算完成率
   const totalPossibleDays = daysToSubtract
   const completionRate = totalPossibleDays > 0
     ? Math.round((totalCheckins / totalPossibleDays) * 100)
@@ -264,14 +276,12 @@ const isAllHabits = computed(() => {
 
 const selectedHabit = computed(() => {
   if (isAllHabits.value) {
-    return null // All habits
+    return null
   }
   return props.habits.find(h => h.id === selectedHabitId.value)
 })
 
-// 监听日期范围变化，重新计算统计数据
 watch(dateRange, () => {
-  // stats 是 computed，会自动重新计算
 })
 </script>
 
@@ -279,8 +289,8 @@ watch(dateRange, () => {
   <!-- 顶部控制栏 -->
   <div class="stats-header">
     <div class="header-left">
-        <el-select v-model="selectedHabitId" placeholder="Select Habit" class="habit-select">
-          <el-option label="All Habits" value="all" />
+        <el-select v-model="selectedHabitId" :placeholder="t('stats.selectHabit')" class="habit-select">
+          <el-option :label="t('stats.allHabits')" value="all" />
           <el-option
             v-for="habit in props.habits"
             :key="habit.id"
@@ -290,11 +300,11 @@ watch(dateRange, () => {
             <span>{{ habit.icon || '📊' }} {{ habit.name }}</span>
           </el-option>
         </el-select>
-        <el-select v-model="dateRange" placeholder="Date Range" class="date-select">
-          <el-option label="Last 7 Days" value="7" />
-          <el-option label="Last 30 Days" value="30" />
-          <el-option label="Last 90 Days" value="90" />
-          <el-option label="Last 365 Days" value="365" />
+        <el-select v-model="dateRange" :placeholder="t('stats.selectHabit')" class="date-select">
+          <el-option :label="t('stats.last7Days')" value="7" />
+          <el-option :label="t('stats.last30Days')" value="30" />
+          <el-option :label="t('stats.last90Days')" value="90" />
+          <el-option :label="t('stats.last365Days')" value="365" />
         </el-select>
       </div>
   </div>
@@ -304,21 +314,21 @@ watch(dateRange, () => {
     <div class="stat-card">
       <div class="stat-icon streak">🔥</div>
       <div class="stat-content">
-        <div class="stat-label">Current Streak</div>
-        <div class="stat-value">{{ stats.currentStreak }} days</div>
+        <div class="stat-label">{{ t('stats.currentStreak') }}</div>
+        <div class="stat-value">{{ stats.currentStreak }} {{ t('dashboard.days') }}</div>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon rate">✅</div>
       <div class="stat-content">
-        <div class="stat-label">Completion Rate</div>
+        <div class="stat-label">{{ t('stats.completionRate') }}</div>
         <div class="stat-value">{{ stats.completionRate }}%</div>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon total">📅</div>
       <div class="stat-content">
-        <div class="stat-label">Total Checkins</div>
+        <div class="stat-label">{{ t('stats.totalCheckins') }}</div>
         <div class="stat-value">{{ stats.totalCheckins }}</div>
       </div>
     </div>
@@ -328,7 +338,7 @@ watch(dateRange, () => {
   <div class="charts-grid">
     <!-- Completion Trend -->
     <div class="chart-card wide">
-      <h3 class="chart-title">Completion Trend</h3>
+      <h3 class="chart-title">{{ t('stats.completionTrend') }}</h3>
       <CompletionTrend 
         v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
         :key="`trend-${chartKey}`"
@@ -337,13 +347,13 @@ watch(dateRange, () => {
         :date-range="dateRange"
         :is-all-habits="isAllHabits"
       />
-      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
-      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">{{ t('stats.noHabitsYet') }}</div>
+      <div v-else class="no-habit-tip">{{ t('stats.overallStats') }}</div>
     </div>
 
     <!-- Habit Heatmap -->
     <div class="chart-card wide">
-      <h3 class="chart-title">Habit Heatmap</h3>
+      <h3 class="chart-title">{{ t('stats.habitHeatmap') }}</h3>
       <HabitHeatmap 
         v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
         :key="`heatmap-${chartKey}`" 
@@ -353,13 +363,13 @@ watch(dateRange, () => {
         :is-all-habits="isAllHabits"
       />
       
-      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
-      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">{{ t('stats.noHabitsYet') }}</div>
+      <div v-else class="no-habit-tip">{{ t('stats.overallStats') }}</div>
     </div>
 
     <!-- Completion Ratio -->
     <div class="chart-card">
-      <h3 class="chart-title">Completion Ratio</h3>
+      <h3 class="chart-title">{{ t('stats.completionRatio') }}</h3>
       <CompletionRatio 
         v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
         :habit="selectedHabit" 
@@ -367,34 +377,34 @@ watch(dateRange, () => {
         :date-range="dateRange"
         :is-all-habits="isAllHabits"
       />
-      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
-      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">{{ t('stats.noHabitsYet') }}</div>
+      <div v-else class="no-habit-tip">{{ t('stats.overallStats') }}</div>
     </div>
 
     <!-- Habit Rankings -->
     <div class="chart-card">
-      <h3 class="chart-title">Habit Rankings</h3>
+      <h3 class="chart-title">{{ t('stats.habitRankings') }}</h3>
       <HabitRankings 
         v-if="(isAllHabits || selectedHabit) && props.habits && props.habits.length > 0"
         :habits="props.habits"
         :date-range="dateRange"
       />
-      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">No habits yet</div>
-      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else-if="props.habits && props.habits.length === 0" class="no-habit-tip">{{ t('stats.noHabitsYet') }}</div>
+      <div v-else class="no-habit-tip">{{ t('stats.overallStats') }}</div>
     </div>
 
     <!-- Complete Rate -->
     <div class="chart-card">
-      <h3 class="chart-title">Completion Rate</h3>
+      <h3 class="chart-title">{{ t('stats.completionRate') }}</h3>
       <CompleteRate v-if="selectedHabit" :habit="selectedHabit" />
-      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else class="no-habit-tip">{{ t('stats.overallStats') }}</div>
     </div>
 
     <!-- Max Streak Days -->
     <div class="chart-card">
-      <h3 class="chart-title">Max Streak Days</h3>
+      <h3 class="chart-title">{{ t('stats.currentStreak') }}</h3>
       <MaxStreakDays v-if="selectedHabit" :habit="selectedHabit" />
-      <div v-else class="no-habit-tip">Overall statistics for all habits</div>
+      <div v-else class="no-habit-tip">{{ t('stats.overallStats') }}</div>
     </div>
   </div>
 </template>
@@ -583,8 +593,13 @@ watch(dateRange, () => {
     min-width: 140px;
   }
 
+  .stats-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
   .stat-card {
-    padding: 5px;
+    padding: 12px;
   }
 
   .stat-icon {
@@ -595,6 +610,23 @@ watch(dateRange, () => {
 
   .stat-value {
     font-size: 20px;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .chart-card.wide {
+    grid-column: span 1;
+  }
+
+  .chart-card {
+    padding: 12px;
+  }
+
+  .chart-title {
+    font-size: 14px;
   }
 }
 </style>

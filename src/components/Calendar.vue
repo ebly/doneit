@@ -1,7 +1,13 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useI18n, registerLocale } from '../utils/i18n.js'
+import { useSettings } from '../composables/useSettings.js'
+import en from '../locales/en.js'
+import zh from '../locales/zh.js'
 
-// 接收习惯数据作为 props
+registerLocale('en', en)
+registerLocale('zh', zh)
+
 const props = defineProps({
   habits: {
     type: Array,
@@ -9,14 +15,19 @@ const props = defineProps({
   }
 })
 
-// 日历相关状态
-const currentDate = ref(new Date())
-const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const { language } = useSettings()
+const { t, currentLang } = useI18n()
 
-// 日历相关计算属性
+watch(() => language.value, (newVal) => {
+  currentLang.value = newVal
+}, { immediate: true })
+
+const currentDate = ref(new Date())
+const weekDays = computed(() => t.value('days'))
+
 const currentMonthLabel = computed(() => {
   const year = currentDate.value.getFullYear()
-  const month = currentDate.value.toLocaleString('en-US', { month: 'short' })
+  const month = currentDate.value.toLocaleString(currentLang.value === 'zh' ? 'zh-CN' : 'en-US', { month: currentLang.value === 'zh' ? 'long' : 'short' })
   return `${month} ${year}`
 })
 
@@ -24,30 +35,22 @@ const calendarCells = computed(() => {
   const year = currentDate.value.getFullYear()
   const month = currentDate.value.getMonth()
   
-  // 获取当月第一天
   const firstDay = new Date(year, month, 1)
-  // 获取当月最后一天
   const lastDay = new Date(year, month + 1, 0)
-  // 获取第一天是星期几
   const firstDayOfWeek = firstDay.getDay()
-  // 获取当月总天数
   const totalDays = lastDay.getDate()
   
   const cells = []
   const today = new Date()
   
-  // 添加空单元格（上个月的）
   for (let i = 0; i < firstDayOfWeek; i++) {
     cells.push({ isEmpty: true })
   }
   
-  // 添加日期单元格
   for (let day = 1; day <= totalDays; day++) {
     const cellDate = new Date(year, month, day)
-    // 使用本地时间格式化，避免时区问题
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
     
-    // 查找这一天完成的习惯
     const completions = props.habits.filter(habit => {
       if (!habit.completedDates) return false
       return habit.completedDates.some(d => {
@@ -67,7 +70,6 @@ const calendarCells = computed(() => {
   return cells
 })
 
-// 切换月份
 const previousMonth = () => {
   currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1)
 }
@@ -78,7 +80,10 @@ const nextMonth = () => {
 </script>
 
 <template>
-  <div class="calendar-content">
+  <div v-if="props.habits.length === 0" class="empty-calendar">
+    <el-empty :description="t('calendar.noHabits')" image-size="80" />
+  </div>
+  <div v-else class="calendar-content">
     <div class="calendar-header-nav">
       <div class="nav-arrow" @click="previousMonth">
         &lt;
@@ -212,5 +217,58 @@ const nextMonth = () => {
   justify-content: flex-start;
   overflow-y: auto;
   width: 100%;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .calendar-header-nav {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .calendar-header-nav h3 {
+    font-size: 16px;
+    padding: 0 20px;
+  }
+
+  .nav-arrow {
+    font-size: 18px;
+    padding: 8px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-weekday {
+    font-size: 10px;
+    padding: 6px 0;
+  }
+
+  .calendar-cell {
+    padding: 4px;
+    min-height: 40px;
+  }
+
+  .cell-date {
+    font-size: 12px;
+  }
+
+  .cell-completions {
+    gap: 2px;
+  }
+
+  .completion-tag {
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+
+  .completion-icon {
+    font-size: 10px;
+  }
+
+  .completion-name {
+    max-width: 40px;
+  }
 }
 </style>

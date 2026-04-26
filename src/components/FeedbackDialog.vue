@@ -1,8 +1,15 @@
-<script setup lang="ts">
-import { ref } from 'vue'
+<script setup>
+import { ref, watch } from 'vue'
 import { ChatLineRound } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { checkTimeTampering } from '@/utils/timeValidator'
+import { useI18n, registerLocale } from '../utils/i18n.js'
+import { useSettings } from '../composables/useSettings.js'
+import en from '../locales/en.js'
+import zh from '../locales/zh.js'
+
+registerLocale('en', en)
+registerLocale('zh', zh)
 
 const props = defineProps({
   visible: {
@@ -13,13 +20,17 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible'])
 
-// ⚠️ Please replace with your email address
-// First time use requires activation via email from Formsubmit.co
-const RECIPIENT_EMAIL = 'eblybryan123@gmail.com'
+const { language } = useSettings()
+const { t, currentLang } = useI18n()
 
-// 防 spam 配置
-const SUBMISSION_COOLDOWN = 60 * 1000 // 两次提交间隔：60 秒
-const DAILY_SUBMISSION_LIMIT = 3 // 每天最多提交次数
+watch(() => language.value, (newVal) => {
+  currentLang.value = newVal
+}, { immediate: true })
+
+const RECIPIENT_EMAIL = import.meta.env.VITE_FEEDBACK_EMAIL || 'eblybryan123@gmail.com'
+
+const SUBMISSION_COOLDOWN = 60 * 1000
+const DAILY_SUBMISSION_LIMIT = 3
 const STORAGE_KEY_SUBMISSIONS = 'feedback_submissions'
 const STORAGE_KEY_LAST_SUBMISSION = 'feedback_last_submission'
 
@@ -27,9 +38,7 @@ const feedbackContent = ref('')
 const feedbackEmail = ref('')
 const isSubmitting = ref(false)
 
-// 检查提交限制
 const checkSubmissionLimits = async () => {
-  // 首先检查时间是否被篡改
   const timeCheck = await checkTimeTampering()
   if (!timeCheck.valid) {
     return {
@@ -40,7 +49,6 @@ const checkSubmissionLimits = async () => {
   
   const now = Date.now()
   
-  // 检查冷却时间
   const lastSubmission = localStorage.getItem(STORAGE_KEY_LAST_SUBMISSION)
   if (lastSubmission) {
     const timeSinceLastSubmission = now - parseInt(lastSubmission)
@@ -48,16 +56,14 @@ const checkSubmissionLimits = async () => {
       const remainingSeconds = Math.ceil((SUBMISSION_COOLDOWN - timeSinceLastSubmission) / 1000)
       return {
         allowed: false,
-        message: `Please wait ${remainingSeconds} seconds before submitting again`
+        message: t.value('feedback.waitSeconds').replace('{seconds}', remainingSeconds)
       }
     }
   }
   
-  // 检查每日限制
   const today = new Date().toDateString()
   const submissions = JSON.parse(localStorage.getItem(STORAGE_KEY_SUBMISSIONS) || '[]')
   
-  // 清理过期的提交记录（只保留今天的）
   const todaySubmissions = submissions.filter(item => {
     const submissionDate = new Date(item.timestamp).toDateString()
     return submissionDate === today
@@ -66,21 +72,18 @@ const checkSubmissionLimits = async () => {
   if (todaySubmissions.length >= DAILY_SUBMISSION_LIMIT) {
     return {
       allowed: false,
-      message: `You have reached the daily submission limit (${DAILY_SUBMISSION_LIMIT} submissions per day)`
+      message: t.value('feedback.dailyLimit').replace('{limit}', DAILY_SUBMISSION_LIMIT)
     }
   }
   
   return { allowed: true }
 }
 
-// 记录提交
 const recordSubmission = () => {
   const now = Date.now()
   
-  // 记录上次提交时间
   localStorage.setItem(STORAGE_KEY_LAST_SUBMISSION, now.toString())
   
-  // 记录今日提交
   const submissions = JSON.parse(localStorage.getItem(STORAGE_KEY_SUBMISSIONS) || '[]')
   submissions.push({
     timestamp: now,
@@ -90,30 +93,26 @@ const recordSubmission = () => {
 }
 
 const submitFeedback = async () => {
-  // 验证必填字段
   if (!feedbackContent.value.trim()) {
-    ElMessage.warning('Please enter your feedback')
+    ElMessage.warning(t.value('feedback.enterFeedback'))
     return
   }
   
-  // 检查提交限制（包括时间篡改检测）
   const limitCheck = await checkSubmissionLimits()
   if (!limitCheck.allowed) {
     ElMessage.warning(limitCheck.message)
     return
   }
   
-  // 简单的内容验证，防止明显垃圾内容
   const content = feedbackContent.value.trim()
   if (content.length < 10) {
-    ElMessage.warning('Feedback must be at least 10 characters long')
+    ElMessage.warning(t.value('feedback.minLength'))
     return
   }
   
-  // 检查是否包含过多链接（防 spam）
   const urlCount = (content.match(/https?:\/\/\S+/g) || []).length
   if (urlCount > 2) {
-    ElMessage.warning('Feedback cannot contain more than 2 URLs')
+    ElMessage.warning(t.value('feedback.tooManyUrls'))
     return
   }
 
@@ -137,19 +136,17 @@ const submitFeedback = async () => {
     const result = await response.json()
 
     if (result.success) {
-      ElMessage.success('Feedback sent successfully! Thank you for your input.')
+      ElMessage.success(t.value('feedback.success'))
       emit('update:visible', false)
-      // Clear form
       feedbackContent.value = ''
       feedbackEmail.value = ''
-      // 记录提交
       recordSubmission()
     } else {
-      ElMessage.error('Failed to send. Please try again later.')
+      ElMessage.error(t.value('feedback.failed'))
     }
   } catch (error) {
     console.error('Submission failed:', error)
-    ElMessage.error('Failed to send. Please try again later.')
+    ElMessage.error(t.value('feedback.failed'))
   } finally {
     isSubmitting.value = false
   }
@@ -160,22 +157,22 @@ const submitFeedback = async () => {
   <el-dialog
     :model-value="visible"
     @update:model-value="emit('update:visible', $event)"
-    title="Feedback"
+    :title="t('feedback.title')"
     width="400px"
     :close-on-click-modal="true"
     :close-on-press-escape="true"
   >
     <el-alert 
-      title="First Time Use" 
+      :title="t('feedback.firstTimeTitle')" 
       type="info" 
       :closable="false"
       style="margin-bottom: 16px;"
     >
       <p style="margin: 0; font-size: 13px; margin-bottom: 8px;">
-        On first submission, an activation email will be sent to the admin email. Please confirm activation to enable future submissions.
+        {{ t('feedback.firstTimeDesc') }}
       </p>
       <p style="margin: 0; font-size: 12px; color: var(--warning-color);">
-        <strong>Limits:</strong> Max 3 submissions per day, 60 seconds between submissions
+        <strong>{{ t('feedback.limits') }}</strong>
       </p>
     </el-alert>
     <el-form label-position="top">
@@ -184,29 +181,29 @@ const submitFeedback = async () => {
           v-model="feedbackContent" 
           type="textarea" 
           :rows="3" 
-          placeholder="Please share your feedback with us. We value every input!" 
+          :placeholder="t('feedback.placeholder')" 
           maxlength="100"
           show-word-limit
         />
       </el-form-item>
-      <el-form-item label="Your Email (Optional)">
+      <el-form-item :label="t('feedback.emailLabel')">
         <el-input 
           v-model="feedbackEmail" 
-          placeholder="So we can contact you regarding your feedback" 
+          :placeholder="t('feedback.emailPlaceholder')" 
           type="email"
         />
       </el-form-item>
     </el-form>
     <template #footer>
       <div class="feedback-footer">
-        <el-button @click="emit('update:visible', false)">Cancel</el-button>
+        <el-button @click="emit('update:visible', false)">{{ t('common.cancel') }}</el-button>
         <el-button 
         type="primary" 
         @click="submitFeedback" 
         :loading="isSubmitting"
         :disabled="isSubmitting"
       >
-        {{ isSubmitting ? 'Sending...' : 'Send' }}
+        {{ isSubmitting ? t('feedback.sending') : t('feedback.send') }}
       </el-button>
       </div>
     </template>

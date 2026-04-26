@@ -26,7 +26,7 @@ initReminderScheduler()
 // 迁移打卡记录到新格式
 migrateCompletionRecords().then(migrated => {
   if (migrated) {
-    console.log('[App] Completion records migrated to new format')
+    // Records migrated to new format
   }
 })
 
