@@ -36,11 +36,7 @@
 
 html {
   height: 100%;
-  height: -webkit-fill-available;
   overflow: hidden;
-  position: fixed;
-  width: 100%;
-  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -53,9 +49,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   height: 100%;
-  height: -webkit-fill-available;
-  position: fixed;
-  width: 100%;
+  position: relative;
   touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
 }
