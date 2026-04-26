@@ -38,6 +38,15 @@ onMounted(async () => {
   if (import.meta.env.DEV) {
     loadMockDataScript(loadHabits)
   }
+
+  // 动态设置视口高度
+  const setViewportHeight = () => {
+    const vh = window.innerHeight * 0.01
+    document.documentElement.style.setProperty('--vh', `${vh}px`)
+  }
+
+  setViewportHeight()
+  window.addEventListener('resize', setViewportHeight)
 })
 </script>
 
@@ -82,12 +91,12 @@ onMounted(async () => {
 <style scoped>
 .app-container {
   background-color: var(--bg-primary);
-  height: 100dvh;
-  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
 }
 
 .pc-layout {
