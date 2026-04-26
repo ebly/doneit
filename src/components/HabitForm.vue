@@ -377,7 +377,8 @@ const handleIconSelect = (icon) => {
 @media (max-width: 768px) {
   :deep(.el-dialog) {
     width: 90% !important;
-    margin: 0 auto !important;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   :deep(.el-form-item__label) {

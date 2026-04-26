@@ -352,7 +352,6 @@ body.dark-mode .main-content {
   /* 对话框适配 */
   .el-dialog {
     width: 90% !important;
-    margin: 0 auto !important;
   }
 
   /* 设置对话框适配 */

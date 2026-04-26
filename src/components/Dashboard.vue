@@ -571,7 +571,6 @@ onMounted(() => {
 <style scoped>
 .dashboard-container {
   background-color: var(--bg-primary);
-  min-height: calc(100vh - 60px);
 }
 
 .dashboard-header {

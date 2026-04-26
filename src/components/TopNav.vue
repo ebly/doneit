@@ -94,7 +94,7 @@ const handleReminderToggle = async (enabled) => {
     <header class="header">
       <div class="logo">
         <h1>DoneIt</h1>
-        <span class="version">v1.0.3</span>
+        <span class="version">v1.0.4</span>
       </div>
       <div class="logo1">
         <h1>DoneIt</h1>
