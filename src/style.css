@@ -34,6 +34,14 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
 body {
   font-family: var(--font-sans);
   font-size: 16px;
@@ -43,6 +51,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  height: 100%;
+  height: -webkit-fill-available;
+  position: fixed;
+  width: 100%;
+  touch-action: manipulation;
 }
 
 /* 标题样式 */
@@ -87,9 +100,9 @@ body.dark-mode .main-content {
 .app-container {
   display: flex;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100%;
+  height: -webkit-fill-available;
   background-color: var(--bg-secondary);
-  min-width: 500px;
 }
 
 /* PC 端布局 */
@@ -97,10 +110,11 @@ body.dark-mode .main-content {
   flex: 1;
   background: var(--bg-primary);
   box-shadow: var(--shadow-md);
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  height: -webkit-fill-available;
   width: 100%;
 }
 
